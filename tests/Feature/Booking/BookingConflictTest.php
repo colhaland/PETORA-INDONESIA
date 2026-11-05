@@ -22,6 +22,7 @@ class BookingConflictTest extends TestCase
         $this->seed([PermissionSeeder::class, BranchSeeder::class]);
         $user = User::factory()->create();
         $user->givePermissionTo('bookings.create');
+        $user->branches()->sync([1]);
         $this->actingAs($user);
 
         $customer = Customer::create(['name' => 'A', 'customer_number' => 'CUS-000001']);

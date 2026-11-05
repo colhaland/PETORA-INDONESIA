@@ -22,6 +22,7 @@ class BookingCrudTest extends TestCase
         $this->seed(PermissionSeeder::class);
         $this->seed(BranchSeeder::class);
         $user->givePermissionTo('bookings.create', 'bookings.confirm', 'bookings.cancel', 'bookings.view');
+        $user->branches()->sync([1]);
         $this->actingAs($user);
 
         return $user;
