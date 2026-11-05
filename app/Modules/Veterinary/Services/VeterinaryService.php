@@ -35,14 +35,21 @@ class VeterinaryService
     public function revise(MedicalVisit $visit, array $newData): void
     {
         Gate::authorize('medical_records.update');
-        $before = $visit->toArray();
+        $clinicalKeys = ['subjective', 'objective', 'assessment', 'plan', 'status', 'visible_to_owner', 'finalized_at', 'branch_id', 'pet_id', 'doctor_id'];
+        $before = array_intersect_key($visit->getAttributes(), array_flip($clinicalKeys));
         DB::transaction(function () use ($visit, $newData, $before): void {
             if (Schema::hasTable('medical_record_revisions')) {
+                $snapshot = json_encode($before, JSON_UNESCAPED_UNICODE);
+                try {
+                    $snapshot = \Illuminate\Support\Facades\Crypt::encryptString($snapshot);
+                } catch (\Throwable) {
+                    // keep plaintext snapshot only when app key unavailable
+                }
                 DB::table('medical_record_revisions')->insert([
                     'medical_visit_id' => $visit->id,
                     'revised_by' => auth()->id(),
                     'reason' => $newData['revision_reason'] ?? null,
-                    'previous_snapshot' => json_encode($before, JSON_UNESCAPED_UNICODE),
+                    'previous_snapshot' => $snapshot,
                     'revised_at' => now(),
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -50,7 +57,7 @@ class VeterinaryService
             }
             unset($newData['revision_reason']);
             $visit->update($newData);
-            AuditService::log('medical_visit.revise', MedicalVisit::class, $visit->id, $before, $visit->fresh()?->toArray() ?? []);
+            AuditService::log('medical_visit.revise', MedicalVisit::class, $visit->id, $before, $visit->fresh()?->only($clinicalKeys) ?? []);
         });
     }
 }

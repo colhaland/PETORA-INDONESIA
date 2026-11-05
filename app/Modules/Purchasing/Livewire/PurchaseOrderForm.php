@@ -7,6 +7,8 @@ namespace App\Modules\Purchasing\Livewire;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Modules\Purchasing\Services\PurchasingService;
+use App\Support\Money;
+use App\Support\RecordFinder;
 use Livewire\Component;
 
 class PurchaseOrderForm extends Component
@@ -22,7 +24,8 @@ class PurchaseOrderForm extends Component
         $this->validate(['supplierId' => 'required|integer', 'total' => 'required|numeric|min:0']);
         $branchId = 1;
         if ($this->poId) {
-            PurchaseOrder::findOrFail($this->poId)->update(['supplier_id' => $this->supplierId, 'total' => $this->total]);
+            $po = RecordFinder::forClass(PurchaseOrder::class, $this->poId);
+            $po->update(['supplier_id' => $this->supplierId, 'total' => Money::of($this->total, 2)]);
         } else {
             $svc->createPo($branchId, $this->supplierId, $this->total, auth()->id());
         }
