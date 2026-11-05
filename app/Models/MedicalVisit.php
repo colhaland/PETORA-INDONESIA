@@ -1,0 +1,8 @@
+<?php
+declare(strict_types=1);
+namespace App\Models;
+use Illuminate\Database\Eloquent\Model;
+class MedicalVisit extends Model
+{
+    protected $fillable = ['branch_id', 'pet_id', 'doctor_id', 'status', 'subjective', 'objective', 'assessment', 'plan', 'visible_to_owner', 'finalized_at'];
+}

@@ -1,0 +1,1 @@
+<form wire:submit="save"><input wire:model="name" placeholder="Nama"><select wire:model="species"><option value="dog">Anjing</option><option value="cat">Kucing</option></select><button type="submit">Simpan</button></form>
