@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Auth\Livewire;
 
+use App\Models\User;
+use App\Support\AuditService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -12,7 +14,9 @@ use Livewire\Component;
 class Login extends Component
 {
     public string $login = '';
+
     public string $email = '';
+
     public string $password = '';
 
     public function authenticate(): void
@@ -24,6 +28,7 @@ class Login extends Component
         ]);
         if ($identifier === '') {
             $this->addError('login', __('auth.login_required'));
+
             return;
         }
 
@@ -34,6 +39,7 @@ class Login extends Component
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             $seconds = RateLimiter::availableIn($key);
             $this->addError('login', __('auth.throttle', ['seconds' => $seconds]));
+
             return;
         }
 
@@ -43,6 +49,7 @@ class Login extends Component
         if (! Auth::attempt($credentials, false)) {
             RateLimiter::hit($key, $decay);
             $this->addError('login', __('auth.failed'));
+
             return;
         }
 
@@ -52,10 +59,21 @@ class Login extends Component
         if ($user && ($user->status ?? 'active') !== 'active') {
             Auth::logout();
             $this->addError('login', __('auth.inactive'));
+
+            return;
+        }
+
+        if ($user && ! empty($user->two_factor_confirmed_at) && ! empty($user->two_factor_secret)) {
+            session(['auth.2fa_pending_user_id' => $user->id]);
+            Auth::logout();
+            $this->redirect(route('two-factor.challenge'), navigate: false);
+
             return;
         }
 
         session()->regenerate();
+        AuditService::log('auth.login', User::class, $user?->id);
+        $user?->forceFill(['last_login_at' => now()])->save();
         $this->redirect(route('dashboard'), navigate: false);
     }
 

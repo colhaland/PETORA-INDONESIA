@@ -121,4 +121,19 @@ class PosService
         $shift->update(['status' => 'closed', 'closing_amount' => round($closing, 2), 'closed_at' => now()]);
         AuditService::log('cash.close', CashShift::class, $shift->id, [], ['closing_amount' => round($closing, 2)]);
     }
+
+    public function voidOrder(Order $order, ?string $reason = null): void
+    {
+        Gate::authorize('pos.void');
+        $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+        if ($order->payments()->exists() && (float) $order->payments()->sum('amount') > 0) {
+            throw new \RuntimeException('Order dengan pembayaran tidak dapat di-void. Gunakan refund.');
+        }
+        if (in_array($order->status, [Order::STATUS_PAID, Order::STATUS_COMPLETED, Order::STATUS_REFUNDED], true)) {
+            throw new \RuntimeException('Order paid/completed/refunded tidak dapat di-void.');
+        }
+        $old = $order->status;
+        $order->update(['status' => Order::STATUS_VOID]);
+        AuditService::log('pos.void', Order::class, $order->id, ['status' => $old], ['status' => Order::STATUS_VOID, 'reason' => $reason]);
+    }
 }
