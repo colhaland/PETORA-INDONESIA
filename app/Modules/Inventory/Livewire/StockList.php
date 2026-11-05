@@ -1,8 +1,12 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Modules\Inventory\Livewire;
+
 use App\Models\StockBalance;
 use Livewire\Component;
+
 class StockList extends Component
 {
     public function render()

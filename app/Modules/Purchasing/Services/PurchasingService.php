@@ -28,6 +28,7 @@ class PurchasingService
             'created_by' => $userId,
         ]);
         AuditService::log('po.create', PurchaseOrder::class, $po->id);
+
         return $po;
     }
 
@@ -41,10 +42,12 @@ class PurchasingService
     public function receive(PurchaseOrder $po, ?int $userId = null): GoodsReceipt
     {
         Gate::authorize('purchasing.receive');
+
         return DB::transaction(function () use ($po, $userId) {
             $po->update(['status' => 'received']);
             $gr = GoodsReceipt::create(['purchase_order_id' => $po->id, 'status' => 'received', 'received_by' => $userId]);
             AuditService::log('po.receive', PurchaseOrder::class, $po->id);
+
             return $gr;
         });
     }

@@ -1,8 +1,12 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Modules\Staff\Livewire;
+
 use App\Models\User;
 use Livewire\Component;
+
 class StaffList extends Component
 {
     public function render()

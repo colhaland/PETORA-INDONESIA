@@ -1,8 +1,12 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Modules\Users\Livewire;
+
 use App\Models\User;
 use Livewire\Component;
+
 class UserList extends Component
 {
     public function render()

@@ -1,13 +1,18 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Modules\Customers\Requests;
+
 use Illuminate\Foundation\Http\FormRequest;
+
 class StoreCustomerRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return $this->user()->can('customers.create');
     }
+
     public function rules(): array
     {
         return [

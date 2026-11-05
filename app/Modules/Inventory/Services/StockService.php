@@ -10,6 +10,7 @@ use App\Support\AuditService;
 use App\Support\DocumentNumberService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 
 class StockService
 {
@@ -39,6 +40,7 @@ class StockService
     public function issue(int $warehouseId, int $productId, float $qty, string $method = 'fifo', ?int $userId = null): array
     {
         Gate::authorize('inventory.adjust');
+
         return DB::transaction(function () use ($warehouseId, $productId, $qty, $method, $userId) {
             $allowNegative = (bool) config('petora.stock.allow_negative', false);
             $balances = StockBalance::where('warehouse_id', $warehouseId)
@@ -78,6 +80,7 @@ class StockService
                 throw new \RuntimeException('Stok tidak mencukupi.');
             }
             AuditService::log('stock.issue', StockBalance::class, null, [], ['qty' => $qty, 'product_id' => $productId]);
+
             return $issued;
         });
     }
@@ -85,9 +88,10 @@ class StockService
     private function movementNo(): ?string
     {
         try {
-            if (! \Illuminate\Support\Facades\Schema::hasTable('document_sequences')) {
+            if (! Schema::hasTable('document_sequences')) {
                 return null;
             }
+
             return DocumentNumberService::next('STM', 'SYS');
         } catch (\Throwable) {
             return null;

@@ -1,9 +1,13 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Modules\Pos\Services;
+
 use App\Models\Order;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
+
 class PaymentService
 {
     public function pay(Order $order, string $method, float $amount): Payment
@@ -16,6 +20,7 @@ class PaymentService
             } else {
                 $order->update(['status' => 'partially_paid']);
             }
+
             return $payment;
         });
     }

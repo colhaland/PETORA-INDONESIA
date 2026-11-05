@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class RoleSeeder extends Seeder
@@ -16,10 +17,10 @@ class RoleSeeder extends Seeder
         }
 
         $super = Role::findByName('Super Admin');
-        $super->syncPermissions(\Spatie\Permission\Models\Permission::all());
+        $super->syncPermissions(Permission::all());
 
         $admin = Role::findByName('Admin');
-        $admin->syncPermissions(\Spatie\Permission\Models\Permission::where('name', 'not like', 'integrations.%')
+        $admin->syncPermissions(Permission::where('name', 'not like', 'integrations.%')
             ->where('name', 'not like', 'backup.%')
             ->where('name', 'not like', 'settings.manage')
             ->get());

@@ -1,8 +1,12 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Modules\Accounting\Services;
-use Illuminate\Support\Facades\Gate;
+
 use App\Support\AuditService;
+use Illuminate\Support\Facades\Gate;
+
 class AccountingService
 {
     public function createJournal(array $entries): bool
@@ -14,6 +18,7 @@ class AccountingService
             throw new \RuntimeException('Jurnal tidak seimbang.');
         }
         AuditService::log('accounting.journal_create', 'Journal', null);
+
         return true;
     }
 }

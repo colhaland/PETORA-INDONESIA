@@ -19,6 +19,7 @@ class FinanceService
         }
         $e = Expense::create($data);
         AuditService::log('expense.create', Expense::class, $e->id, [], ['amount' => $e->amount]);
+
         return $e;
     }
 

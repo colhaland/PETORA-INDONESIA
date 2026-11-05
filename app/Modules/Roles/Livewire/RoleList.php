@@ -1,8 +1,12 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Modules\Roles\Livewire;
-use Spatie\Permission\Models\Role;
+
 use Livewire\Component;
+use Spatie\Permission\Models\Role;
+
 class RoleList extends Component
 {
     public function render()
