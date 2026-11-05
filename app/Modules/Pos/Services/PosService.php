@@ -11,8 +11,10 @@ use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Support\AuditService;
 use App\Support\DocumentNumberService;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 
 class PosService
 {
@@ -32,6 +34,7 @@ class PosService
             'total' => 0,
         ]);
         AuditService::log('pos.create', Order::class, $order->id);
+
         return $order;
     }
 
@@ -43,8 +46,8 @@ class PosService
             throw new \RuntimeException('Order yang sudah dibayar tidak dapat diubah.');
         }
         $qtyS = number_format($qty, 3, '.', '');
-        $priceS = \App\Support\Money::of($unitPrice, 2);
-        $lineTotal = \App\Support\Money::mul($qtyS, $priceS, 2);
+        $priceS = Money::of($unitPrice, 2);
+        $lineTotal = Money::mul($qtyS, $priceS, 2);
         $item = OrderItem::create([
             'order_id' => $order->id,
             'description' => $description,
@@ -54,18 +57,20 @@ class PosService
         ]);
         $subtotal = '0.00';
         foreach ($order->items()->get() as $row) {
-            $subtotal = \App\Support\Money::add($subtotal, (string) $row->total, 2);
+            $subtotal = Money::add($subtotal, (string) $row->total, 2);
         }
         $order->update(['subtotal' => $subtotal, 'total' => $subtotal]);
+
         return $item;
     }
 
     public function pay(Order $order, string $method, float $amount, ?string $idempotencyKey = null): Payment
     {
         Gate::authorize('pos.create');
+
         return DB::transaction(function () use ($order, $method, $amount, $idempotencyKey) {
             $order = Order::query()->lockForUpdate()->findOrFail($order->id);
-            $amountS = \App\Support\Money::of($amount, 2);
+            $amountS = Money::of($amount, 2);
             $payment = Payment::create([
                 'order_id' => $order->id,
                 'method' => $method,
@@ -73,23 +78,24 @@ class PosService
             ]);
             $paid = '0.00';
             foreach ($order->payments()->get() as $p) {
-                $paid = \App\Support\Money::add($paid, (string) $p->amount, 2);
+                $paid = Money::add($paid, (string) $p->amount, 2);
             }
-            $total = \App\Support\Money::of($order->total, 2);
+            $total = Money::of($order->total, 2);
             $updates = [];
-            if (\App\Support\Money::cmp($paid, $total, 2) >= 0 && \App\Support\Money::isPositive($total, 2)) {
+            if (Money::cmp($paid, $total, 2) >= 0 && Money::isPositive($total, 2)) {
                 $updates['status'] = 'paid';
                 $updates['paid_at'] = $order->paid_at ?: now();
-            } elseif (\App\Support\Money::isPositive($paid, 2)) {
+            } elseif (Money::isPositive($paid, 2)) {
                 $updates['status'] = 'partially_paid';
             }
-            if ($idempotencyKey && \Illuminate\Support\Facades\Schema::hasColumn('orders', 'idempotency_key') && empty($order->idempotency_key)) {
+            if ($idempotencyKey && Schema::hasColumn('orders', 'idempotency_key') && empty($order->idempotency_key)) {
                 $updates['idempotency_key'] = $idempotencyKey;
             }
             if ($updates !== []) {
                 $order->update($updates);
             }
             AuditService::log('pos.pay', Order::class, $order->id, [], ['status' => $order->fresh()->status, 'paid' => $paid]);
+
             return $payment;
         });
     }
@@ -105,6 +111,7 @@ class PosService
             'opened_at' => now(),
         ]);
         AuditService::log('cash.open', CashShift::class, $shift->id);
+
         return $shift;
     }
 

@@ -9,12 +9,19 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_OPEN = 'open';
+
     public const STATUS_PARTIALLY_PAID = 'partially_paid';
+
     public const STATUS_PAID = 'paid';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_CANCELLED = 'cancelled';
+
     public const STATUS_VOID = 'void';
+
     public const STATUS_REFUNDED = 'refunded';
 
     protected $fillable = [

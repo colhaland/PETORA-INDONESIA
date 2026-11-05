@@ -10,9 +10,11 @@ final class Money
     {
         if (function_exists('bcadd')) {
             $s = is_string($value) ? $value : number_format((float) $value, $scale, '.', '');
+
             return bcadd($s, '0', $scale);
         }
         $n = is_string($value) ? (float) $value : (float) $value;
+
         return number_format($n, $scale, '.', '');
     }
 
@@ -21,6 +23,7 @@ final class Money
         if (function_exists('bcadd')) {
             return bcadd(self::of($a, $scale), self::of($b, $scale), $scale);
         }
+
         return number_format((float) self::of($a, $scale) + (float) self::of($b, $scale), $scale, '.', '');
     }
 
@@ -29,6 +32,7 @@ final class Money
         if (function_exists('bcsub')) {
             return bcsub(self::of($a, $scale), self::of($b, $scale), $scale);
         }
+
         return number_format((float) self::of($a, $scale) - (float) self::of($b, $scale), $scale, '.', '');
     }
 
@@ -37,6 +41,7 @@ final class Money
         if (function_exists('bcmul')) {
             return bcmul(self::of($a, $scale), self::of($b, $scale), $scale);
         }
+
         return number_format((float) self::of($a, $scale) * (float) self::of($b, $scale), $scale, '.', '');
     }
 
@@ -47,6 +52,7 @@ final class Money
         }
         $x = (float) self::of($a, $scale);
         $y = (float) self::of($b, $scale);
+
         return $x <=> $y;
     }
 

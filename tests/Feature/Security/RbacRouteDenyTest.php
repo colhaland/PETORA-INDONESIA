@@ -62,4 +62,25 @@ class RbacRouteDenyTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user)->get('/users')->assertForbidden();
     }
+
+    public function test_user_without_permission_cannot_access_roles(): void
+    {
+        $this->seed(PermissionSeeder::class);
+        $user = User::factory()->create();
+        $this->actingAs($user)->get('/roles')->assertForbidden();
+    }
+
+    public function test_user_without_permission_cannot_access_veterinary(): void
+    {
+        $this->seed(PermissionSeeder::class);
+        $user = User::factory()->create();
+        $this->actingAs($user)->get('/veterinary')->assertForbidden();
+    }
+
+    public function test_user_without_permission_cannot_access_integrations(): void
+    {
+        $this->seed(PermissionSeeder::class);
+        $user = User::factory()->create();
+        $this->actingAs($user)->get('/integration')->assertForbidden();
+    }
 }
