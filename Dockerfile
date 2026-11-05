@@ -19,6 +19,8 @@ RUN apt-get update \
         unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" bcmath gd intl mbstring opcache pcntl pdo_pgsql zip \
+    && pecl install redis-6.2.0 \
+    && docker-php-ext-enable redis \
     && apt-get purge -y --auto-remove \
         libfreetype6-dev \
         libicu-dev \
@@ -60,6 +62,9 @@ COPY . .
 RUN composer dump-autoload --no-dev --classmap-authoritative --no-interaction --no-scripts \
     && APP_ENV=local php artisan package:discover --ansi \
     && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && chown -R root:root app bootstrap config database public resources routes vendor \
+    && chmod -R a=rX,u+w app bootstrap config database public resources routes vendor \
+    && chmod a=rX,u+w artisan \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwX storage bootstrap/cache
 

@@ -5,8 +5,8 @@ The production stack targets Ubuntu 24.04 with Docker Compose. It is not safe to
 ## Host and secrets
 
 1. Install Docker Engine and the Compose plugin. Create `/etc/petora/secrets` with mode `0700`; keep the production environment file at `/etc/petora/.env.production` with mode `0600`.
-2. Provide PostgreSQL server TLS certificates whose SAN contains `postgres`, Redis TLS certificates whose SAN contains `redis`, and a CA certificate trusted by both services. The PostgreSQL server private key must be readable by the container's `postgres` user (UID 999) and have mode `0600`. Do not expose PostgreSQL or Redis ports on the host firewall.
-3. Generate unique database and Redis passwords, a Laravel `APP_KEY`, an unguessable `HEALTHCHECK_TOKEN`, SMTP credentials, and a separate high-entropy backup encryption passphrase. Store the passphrase in `/etc/petora/secrets/backup-encryption-key`, mode `0600`; keep an offline recovery copy separate from the VPS.
+2. Provide PostgreSQL server TLS certificates whose SAN contains `postgres`, Redis TLS certificates whose SAN contains `redis`, and a CA certificate trusted by both services. The PostgreSQL and Redis private keys must be readable by their container users (UID 999) and have mode `0600`. Do not expose PostgreSQL or Redis ports on the host firewall.
+3. Generate unique database and Redis passwords, a Laravel `APP_KEY`, an unguessable `HEALTHCHECK_TOKEN`, SMTP credentials, and a separate high-entropy backup encryption passphrase. Store the passphrase in `/etc/petora/secrets/backup-encryption-key`, owned by UID 999 with mode `0600`; keep an offline recovery copy separate from the VPS.
 4. Copy `.env.production.example` to the host environment file, set every required value, and set `IMAGE_TAG` to a tag already published to GHCR. Set `APP_DOMAIN`, `APP_URL`, and `ACME_EMAIL` to the real HTTPS site. Do not check real values or certificates into Git.
 5. Before starting services, verify certificate names with `openssl x509 -in CERT_FILE -noout -checkhost postgres` and `... redis` as applicable. Configure the VPS firewall to allow only SSH and the public HTTPS/HTTP ports.
 

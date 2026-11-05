@@ -42,9 +42,12 @@ class MigrateWithAdvisoryLockTest extends TestCase
             'database.connections.pgsql_lock_probe' => config('database.connections.pgsql'),
         ]);
         $probe = DB::connection('pgsql_lock_probe');
-        $result = $probe->select('SELECT pg_try_advisory_lock(?, ?) AS acquired', [1_145_855_813, 1_145_855_814]);
-        $this->assertTrue((bool) $result[0]->acquired);
-        $probe->select('SELECT pg_advisory_unlock(?, ?)', [1_145_855_813, 1_145_855_814]);
-        DB::purge('pgsql_lock_probe');
+        try {
+            $result = $probe->select('SELECT pg_try_advisory_lock(?, ?) AS acquired', [1_145_855_813, 1_145_855_814]);
+            $this->assertTrue((bool) $result[0]->acquired);
+        } finally {
+            $probe->select('SELECT pg_advisory_unlock(?, ?)', [1_145_855_813, 1_145_855_814]);
+            DB::purge('pgsql_lock_probe');
+        }
     }
 }

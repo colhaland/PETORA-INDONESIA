@@ -81,8 +81,10 @@ services:
     networks:
       - backend
     secrets:
-      - postgres-ca
-      - redis-ca
+      - source: postgres-ca
+        target: postgres-ca.crt
+      - source: redis-ca
+        target: redis-ca.crt
     read_only: true
     tmpfs:
       - /tmp
@@ -128,8 +130,10 @@ services:
     networks:
       - backend
     secrets:
-      - postgres-ca
-      - redis-ca
+      - source: postgres-ca
+        target: postgres-ca.crt
+      - source: redis-ca
+        target: redis-ca.crt
     read_only: true
     tmpfs:
       - /tmp
@@ -174,8 +178,10 @@ services:
     networks:
       - backend
     secrets:
-      - postgres-ca
-      - redis-ca
+      - source: postgres-ca
+        target: postgres-ca.crt
+      - source: redis-ca
+        target: redis-ca.crt
     read_only: true
     tmpfs:
       - /tmp
@@ -216,9 +222,12 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./docker/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
     secrets:
-      - postgres-ca
-      - postgres-server-cert
-      - postgres-server-key
+      - source: postgres-ca
+        target: postgres-ca.crt
+      - source: postgres-server-cert
+        target: postgres-server.crt
+      - source: postgres-server-key
+        target: postgres-server.key
     networks:
       - backend
     mem_limit: 1g
@@ -256,9 +265,12 @@ services:
     volumes:
       - redisdata:/data
     secrets:
-      - redis-ca
-      - redis-server-cert
-      - redis-server-key
+      - source: redis-ca
+        target: redis-ca.crt
+      - source: redis-server-cert
+        target: redis-server.crt
+      - source: redis-server-key
+        target: redis-server.key
     networks:
       - backend
     mem_limit: 256m
@@ -289,8 +301,10 @@ services:
       - backups:/backups
       - ./scripts/backup-postgres.sh:/usr/local/bin/backup-postgres.sh:ro
     secrets:
-      - postgres-ca
-      - backup-encryption-key
+      - source: postgres-ca
+        target: postgres-ca.crt
+      - source: backup-encryption-key
+        target: backup-encryption-key
     networks:
       - backend
     mem_limit: 256m
