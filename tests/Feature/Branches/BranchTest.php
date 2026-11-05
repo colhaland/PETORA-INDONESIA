@@ -10,6 +10,8 @@ class BranchTest extends TestCase
     public function test_page_loads(): void
     {
         $user = User::factory()->create();
+        $this->seed(\Database\Seeders\PermissionSeeder::class);
+        $user->givePermissionTo('branches.view');
         $this->actingAs($user)->get('/branches')->assertStatus(200);
     }
 }

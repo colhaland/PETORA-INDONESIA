@@ -10,6 +10,8 @@ class SettingsTest extends TestCase
     public function test_page_loads(): void
     {
         $user = User::factory()->create();
+        $this->seed(\Database\Seeders\PermissionSeeder::class);
+        $user->givePermissionTo('settings.view');
         $this->actingAs($user)->get('/settings')->assertStatus(200);
     }
 }

@@ -10,6 +10,8 @@ class VeterinaryTest extends TestCase
     public function test_veterinary_list_loads(): void
     {
         $user = User::factory()->create();
+        $this->seed(\Database\Seeders\PermissionSeeder::class);
+        $user->givePermissionTo('veterinary.view');
         $this->actingAs($user)->get('/veterinary')->assertStatus(200);
     }
 }

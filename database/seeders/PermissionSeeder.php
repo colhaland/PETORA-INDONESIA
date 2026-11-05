@@ -33,6 +33,8 @@ class PermissionSeeder extends Seeder
             'loyalty' => ['view', 'adjust', 'manage'],
             'promotions' => ['view', 'create', 'update', 'manage', 'approve'],
             'staff' => ['view', 'create', 'update', 'manage'],
+            'portal' => ['view', 'create', 'update', 'manage'],
+            'consignment' => ['view', 'create', 'update', 'manage'],
             'accounting' => ['view', 'create', 'update', 'manage'],
             'home_grooming' => ['view', 'create', 'update', 'manage'],
             'transport' => ['view', 'create', 'update', 'manage'],

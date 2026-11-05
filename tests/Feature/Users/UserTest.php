@@ -10,6 +10,8 @@ class UserTest extends TestCase
     public function test_page_loads(): void
     {
         $user = User::factory()->create();
+        $this->seed(\Database\Seeders\PermissionSeeder::class);
+        $user->givePermissionTo('users.view');
         $this->actingAs($user)->get('/users')->assertStatus(200);
     }
 }

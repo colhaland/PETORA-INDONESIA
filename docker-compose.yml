@@ -1,0 +1,23 @@
+# Skeleton aligned toward MTS (PostgreSQL 16, Redis 7). Production target includes Caddy/Nginx+php-fpm.
+services:
+  app:
+    image: php:8.4-cli
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - postgres
+      - redis
+    command: ["php", "-v"]
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: petora
+      POSTGRES_USER: petora
+      POSTGRES_PASSWORD: petora
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"

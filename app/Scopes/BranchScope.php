@@ -12,9 +12,20 @@ class BranchScope implements Scope
 {
     public function apply(Builder $builder, Model $model): void
     {
-        if (auth()->check() && ! auth()->user()->hasPermissionTo('branches.view_all')) {
-            $branchIds = auth()->user()->branchIds();
-            $builder->whereIn($model->getTable().'.branch_id', $branchIds);
+        $user = auth()->user();
+        if (! $user) {
+            return;
+        }
+
+        if (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('branches.view_all')) {
+            return;
+        }
+
+        if (method_exists($user, 'branchIds')) {
+            $branchIds = array_filter((array) $user->branchIds());
+            if ($branchIds !== []) {
+                $builder->whereIn($model->getTable().'.branch_id', $branchIds);
+            }
         }
     }
 }

@@ -10,6 +10,8 @@ class RoleTest extends TestCase
     public function test_page_loads(): void
     {
         $user = User::factory()->create();
+        $this->seed(\Database\Seeders\PermissionSeeder::class);
+        $user->givePermissionTo('roles.view');
         $this->actingAs($user)->get('/roles')->assertStatus(200);
     }
 }

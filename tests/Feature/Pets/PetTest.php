@@ -10,6 +10,8 @@ class PetTest extends TestCase
     public function test_pet_list_loads(): void
     {
         $user = User::factory()->create();
+        $this->seed(\Database\Seeders\PermissionSeeder::class);
+        $user->givePermissionTo('pets.view');
         $this->actingAs($user)->get('/pets')->assertStatus(200);
     }
 }

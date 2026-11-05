@@ -10,6 +10,8 @@ class ProductTest extends TestCase
     public function test_product_list_loads(): void
     {
         $user = User::factory()->create();
+        $this->seed(\Database\Seeders\PermissionSeeder::class);
+        $user->givePermissionTo('products.view');
         $this->actingAs($user)->get('/products')->assertStatus(200);
     }
 }
