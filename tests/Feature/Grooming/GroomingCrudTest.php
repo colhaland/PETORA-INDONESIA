@@ -24,6 +24,7 @@ class GroomingCrudTest extends TestCase
         $this->seed(PermissionSeeder::class);
         $this->seed(BranchSeeder::class);
         $user->givePermissionTo('grooming.create', 'grooming.checkin', 'grooming.qc', 'grooming.view', 'grooming.manage');
+        $user->branches()->sync([1]);
         $this->actingAs($user);
 
         return $user;
