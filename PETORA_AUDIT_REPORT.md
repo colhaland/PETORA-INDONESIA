@@ -2,7 +2,7 @@
 
 ## Status Remediasi Tahap 0
 
-Status di bawah memperbarui F-01 sampai F-14 berdasarkan perubahan kode dan verifikasi tes setelah audit. **Tahap 0 belum selesai**: F-01 dan F-13 masih terbuka/parsial.
+Status di bawah memperbarui F-01 sampai F-14 berdasarkan perubahan kode dan verifikasi tes setelah audit. **Tahap 0 belum selesai**: F-01 dan F-13 masih terbuka/parsial; fondasi deployment F-13 sudah diimplementasikan dan diuji lokal, tetapi belum ada deployment staging nyata.
 
 | Temuan | Status | Perbaikan dan bukti | Sisa pekerjaan |
 |---|---|---|---|
@@ -18,14 +18,18 @@ Status di bawah memperbarui F-01 sampai F-14 berdasarkan perubahan kode dan veri
 | F-10 | Selesai | Cabang divalidasi server-side dari akses pengguna; form dan service tidak mempercayai cabang yang dimanipulasi klien. | Tidak ada yang diketahui dalam cakupan temuan ini. |
 | F-11 | Selesai | Identitas dokter ditentukan dari pengguna terautentikasi dan diuji di service. | Tidak ada yang diketahui dalam cakupan temuan ini. |
 | F-12 | Selesai | Perubahan Settings memerlukan `settings.manage`, dengan whitelist dan validasi nilai di service. | Tidak ada yang diketahui dalam cakupan temuan ini. |
-| F-13 | Parsial | Workflow CI PostgreSQL ditambahkan; guard produksi menolak konfigurasi tidak aman; skrip deploy/rollback gagal eksplisit alih-alih mengklaim sukses. | Deployment nyata belum dibuat karena target infrastruktur dan prosedur rilis belum tersedia. |
+| F-13 | Parsial (fondasi diuji, belum live) | Dockerfile multi-stage untuk app/web/backup; Compose production dengan TLS PostgreSQL/Redis, health checks, resource limits, secret mounts bernama, dan volume terpisah; migrasi PostgreSQL memakai advisory lock; endpoint health ber-token; backup GPG terenkripsi; deploy/rollback/first-deploy dengan lock, smoke test, dan rollback kode tanpa membalik migrasi; CI menjalankan tes SQLite/PostgreSQL, audit Composer/npm, pemindaian Gitleaks, build/publish image, serta workflow staging/production yang digate. Compose lokal dengan sertifikat uji, route/config cache, health check, dan enkripsi/dekripsi backup lulus. | Belum ada VPS/sertifikat/SMTP produksi, GitHub environment secrets/approval, atau deployment staging yang berhasil; belum ada drill restore/off-site backup. CI tetap mengikuti PHPUnit yang dipakai repositori, belum beralih ke Pest/Larastan atau menambahkan coverage gate MTS. |
 | F-14 | Selesai | Foreign key data medis/keuangan memakai kebijakan restrict dan trigger revisi medis dilindungi; tes PostgreSQL lulus. | Uji operasional restore/retensi tetap diperlukan sebelum produksi. |
 
 ### Verifikasi remediasi
 
 - PostgreSQL 16: suite penuh pada tahap sebelumnya **183 passed (290 assertions)**; verifikasi fokus terakhir setelah perubahan dashboard/laporan **9 passed (17 assertions)**. Tes dashboard/laporan bersama tes RBAC juga lulus (**23 passed, 30 assertions**) sebelum perapian lookup nama cabang.
-- SQLite: suite penuh saat ini — **184 passed, 3 skipped (295 assertions)**; tes yang dilewati memerlukan perilaku khusus PostgreSQL.
-- `./vendor/bin/pint --test --dirty` — lulus.
+- PostgreSQL 16: suite penuh setelah perubahan terbaru — **192 passed (323 assertions)**; dijalankan pada container PostgreSQL sementara, bukan SQLite.
+- SQLite: suite penuh setelah perubahan terbaru — **188 passed, 4 skipped (314 assertions)**; tes yang dilewati memerlukan perilaku khusus PostgreSQL.
+- Deployment Compose integration: app/web, koneksi PostgreSQL dan Redis dengan TLS/CA/SAN, health ber-token, `petora:migrate`, seluruh cache Artisan, serta backup terenkripsi yang berhasil didekripsi dan dibaca `pg_restore` — lulus; seluruh volume/container uji dibersihkan.
+- Build image Docker target app, web, dan backup; validasi `docker compose config`; `composer audit` (tanpa advisori) dan `npm audit` (0 kerentanan) — lulus.
+- Pemindaian Gitleaks atas perubahan deployment — tanpa temuan. CI memindai checkout bersih agar file `.env` lokal tidak ikut dipindai.
+- Pint pada seluruh file PHP yang berubah — lulus. `./vendor/bin/pint --test` untuk seluruh repositori masih menemukan unused import pada `tests/Feature/Security/RecordIsolationTest.php`, file yang tidak diubah pada pekerjaan ini; pemeriksaan CI dibatasi pada file PHP yang berubah.
 - `npm run build` — lulus; Vite menampilkan peringatan opsional bahwa `fontaine` tidak terpasang.
 - Tes fixture menggunakan ID cabang aktual, bukan mengasumsikan sequence PostgreSQL selalu menghasilkan ID `1`.
 

@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
@@ -40,7 +42,25 @@ jobs:
       - name: Build frontend assets
         run: npm run build
       - name: Code style (Pint, dry-run)
-        run: ./vendor/bin/pint --test
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          if [[ "$BASE_SHA" =~ ^0{40}$ ]]; then
+            if git rev-parse --verify "${HEAD_SHA}^" >/dev/null 2>&1; then
+              BASE_SHA="$(git rev-parse "${HEAD_SHA}^")"
+              mapfile -t php_files < <(git diff --name-only --diff-filter=ACMRT "$BASE_SHA" "$HEAD_SHA" -- '*.php')
+            else
+              mapfile -t php_files < <(git ls-tree -r --name-only "$HEAD_SHA" -- '*.php')
+            fi
+          else
+            mapfile -t php_files < <(git diff --name-only --diff-filter=ACMRT "$BASE_SHA" "$HEAD_SHA" -- '*.php')
+          fi
+          if ((${#php_files[@]} == 0)); then
+            echo "No changed PHP files to lint."
+          else
+            ./vendor/bin/pint --test "${php_files[@]}"
+          fi
       - name: Run tests
         env:
           DB_CONNECTION: sqlite
@@ -102,11 +122,22 @@ jobs:
           docker buildx build --progress=plain --target web --tag petora-ci-web .
           docker buildx build --progress=plain --target backup --tag petora-ci-backup .
 
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan the checked-out source for secrets
+        run: >-
+          docker run --rm
+          --volume "$GITHUB_WORKSPACE:/repo:ro"
+          zricethezav/gitleaks:v8.24.2
+          detect --source=/repo --no-git --redact --exit-code 1
+
   publish-images:
     if: >-
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
-    needs: [test, test-pgsql, build-images]
+    needs: [test, test-pgsql, build-images, secret-scan]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -125,7 +156,7 @@ jobs:
           repository="$(printf '%s' "$REPOSITORY" | tr '[:upper:]' '[:lower:]')"
           printf 'repository=ghcr.io/%s/petora-indonesia\n' "${repository%%/*}" >> "$GITHUB_OUTPUT"
           {
-            printf 'tags=%s\n' "$SHA"
+            printf '%s\n' "$SHA"
             if [[ "$REF" == refs/heads/develop ]]; then
               printf 'develop\n'
             elif [[ "$REF" == refs/tags/v* ]]; then
