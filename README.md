@@ -82,17 +82,32 @@ cd petora
 composer install
 npm install
 cp .env.example .env
+# Set unique local PostgreSQL/Redis values in .env; never reuse development
+# credentials in production and keep production values in a secret manager.
 php artisan key:generate
-php artisan migrate --force
+php artisan migrate
 php artisan db:seed
+php artisan petora:bootstrap-admin
 npm run build
 php artisan serve
 ```
 
+The bootstrap command is interactive, accepts a strong password without putting
+it in shell history, and refuses to run once any user exists. The first
+Super Admin login requires 2FA enrollment.
+
+Production startup requires explicit PostgreSQL credentials and a CA certificate
+with full TLS verification, encrypted/secure session cookies, authenticated TLS
+Redis, an HTTPS application URL, and authenticated TLS SMTP. Missing or insecure
+production settings cause the application to fail fast.
+
 ### Docker
 
+Set `POSTGRES_DB`, `POSTGRES_USER`, and a unique `POSTGRES_PASSWORD` in the
+environment before starting dependency containers. Ports are bound to loopback.
+
 ```bash
-docker compose up -d
+docker compose up -d postgres redis
 ```
 
 ---
@@ -100,10 +115,13 @@ docker compose up -d
 ## 🧪 Pengujian
 
 ```bash
-vendor/bin/pest            # test
-vendor/bin/pint --test     # format
-vendor/bin/phpstan analyse # analisis statis
+php artisan test
+./vendor/bin/pint --test
 ```
+
+CI runs the suite against both SQLite and PostgreSQL 16. The deployment and
+rollback scripts intentionally fail until a real release target and rollback
+procedure are configured; they must not be treated as successful deployments.
 
 ---
 

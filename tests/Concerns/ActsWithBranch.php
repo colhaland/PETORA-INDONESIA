@@ -14,8 +14,15 @@ trait ActsWithBranch
     protected function userWithBranch(array $permissions, int $branchId = 1): User
     {
         $this->seed(PermissionSeeder::class);
-        if (Branch::query()->whereKey($branchId)->doesntExist()) {
-            $this->seed(BranchSeeder::class);
+        if ($branchId === 1) {
+            $branch = Branch::query()->where('code', 'PST')->first();
+
+            if ($branch === null) {
+                $this->seed(BranchSeeder::class);
+                $branch = Branch::query()->where('code', 'PST')->firstOrFail();
+            }
+
+            $branchId = (int) $branch->getKey();
         }
         $user = User::factory()->create();
         $user->givePermissionTo($permissions);

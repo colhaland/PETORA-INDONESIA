@@ -22,7 +22,7 @@ class BookingCrudTest extends TestCase
         $this->seed(PermissionSeeder::class);
         $this->seed(BranchSeeder::class);
         $user->givePermissionTo('bookings.create', 'bookings.confirm', 'bookings.cancel', 'bookings.view');
-        $user->branches()->sync([1]);
+        $user->branches()->sync([$this->primaryBranchId()]);
         $this->actingAs($user);
 
         return $user;
@@ -33,7 +33,7 @@ class BookingCrudTest extends TestCase
         $this->authUser();
         $c = Customer::create(['name' => 'Budi', 'customer_number' => 'CUS-000001']);
         $svc = new BookingService;
-        $b = $svc->create(['branch_id' => 1, 'customer_id' => $c->id, 'type' => 'grooming', 'scheduled_at' => now()]);
+        $b = $svc->create(['branch_id' => $this->primaryBranchId(), 'customer_id' => $c->id, 'type' => 'grooming', 'scheduled_at' => now()]);
         $this->assertNotNull($b->booking_number);
         $this->assertEquals('pending', $b->status);
     }
@@ -43,7 +43,7 @@ class BookingCrudTest extends TestCase
         $this->authUser();
         $c = Customer::create(['name' => 'Budi', 'customer_number' => 'CUS-000001']);
         $svc = new BookingService;
-        $b = $svc->create(['branch_id' => 1, 'customer_id' => $c->id, 'type' => 'grooming', 'scheduled_at' => now()]);
+        $b = $svc->create(['branch_id' => $this->primaryBranchId(), 'customer_id' => $c->id, 'type' => 'grooming', 'scheduled_at' => now()]);
         $svc->confirm($b);
         $this->assertEquals('confirmed', $b->fresh()->status);
     }
@@ -53,7 +53,7 @@ class BookingCrudTest extends TestCase
         $this->authUser();
         $c = Customer::create(['name' => 'Budi', 'customer_number' => 'CUS-000001']);
         $svc = new BookingService;
-        $b = $svc->create(['branch_id' => 1, 'customer_id' => $c->id, 'type' => 'grooming', 'scheduled_at' => now()]);
+        $b = $svc->create(['branch_id' => $this->primaryBranchId(), 'customer_id' => $c->id, 'type' => 'grooming', 'scheduled_at' => now()]);
         $svc->cancel($b, 'Customer request');
         $this->assertEquals('cancelled', $b->fresh()->status);
     }

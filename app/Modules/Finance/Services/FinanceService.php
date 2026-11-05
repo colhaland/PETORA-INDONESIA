@@ -34,6 +34,7 @@ class FinanceService
     public function deleteExpense(Expense $expense): void
     {
         Gate::authorize('finance.expense_create');
+        BranchAuthorization::assertCanAccess((int) $expense->branch_id);
         $expense->delete();
         AuditService::log('expense.delete', Expense::class, $expense->id);
     }

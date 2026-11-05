@@ -26,7 +26,7 @@ class PosCrudTest extends TestCase
     {
         $this->authUser();
         $svc = new PosService;
-        $order = $svc->createOrder(1, null, auth()->id());
+        $order = $svc->createOrder($this->primaryBranchId(), null, auth()->id());
         $this->assertNotNull($order->order_number);
         $this->assertEquals('draft', $order->status);
     }
@@ -35,7 +35,7 @@ class PosCrudTest extends TestCase
     {
         $this->authUser();
         $svc = new PosService;
-        $order = $svc->createOrder(1, null, auth()->id());
+        $order = $svc->createOrder($this->primaryBranchId(), null, auth()->id());
         $svc->addItem($order, $this->product()->id, 2);
         $this->assertEquals(20000, (float) $order->fresh()->total);
         $svc->pay($order, 'cash', 20000, 'payment-order-one');
@@ -46,7 +46,7 @@ class PosCrudTest extends TestCase
     {
         $this->authUser();
         $svc = new PosService;
-        $shift = $svc->openShift(1, auth()->id(), 100000);
+        $shift = $svc->openShift($this->primaryBranchId(), auth()->id(), 100000);
         $this->assertEquals('open', $shift->status);
         $svc->closeShift($shift, 120000);
         $this->assertEquals('closed', $shift->fresh()->status);
@@ -56,7 +56,7 @@ class PosCrudTest extends TestCase
     {
         $this->authUser();
         $svc = new PosService;
-        $order = $svc->createOrder(1, null, auth()->id());
+        $order = $svc->createOrder($this->primaryBranchId(), null, auth()->id());
         $svc->addItem($order, $this->product()->id, 1);
         $svc->pay($order, 'cash', 10000, 'payment-order-two');
         $this->expectException(\RuntimeException::class);
@@ -67,7 +67,7 @@ class PosCrudTest extends TestCase
     {
         $this->authUser();
         $svc = new PosService;
-        $order = $svc->createOrder(1, null, auth()->id());
+        $order = $svc->createOrder($this->primaryBranchId(), null, auth()->id());
         $svc->addItem($order, $this->product()->id, 1);
         $svc->pay($order, 'cash', 10000, 'idem-key-1');
         $fresh = $order->fresh();
@@ -79,7 +79,7 @@ class PosCrudTest extends TestCase
     {
         $this->authUser();
         $svc = new PosService;
-        $order = $svc->createOrder(1, null, auth()->id());
+        $order = $svc->createOrder($this->primaryBranchId(), null, auth()->id());
         $svc->addItem($order, $this->product()->id, 1);
 
         $first = $svc->pay($order, 'cash', 10000, 'same-request');
@@ -93,7 +93,7 @@ class PosCrudTest extends TestCase
     {
         $this->authUser();
         $svc = new PosService;
-        $order = $svc->createOrder(1, null, auth()->id());
+        $order = $svc->createOrder($this->primaryBranchId(), null, auth()->id());
         $svc->addItem($order, $this->product()->id, 1);
 
         try {
@@ -112,7 +112,7 @@ class PosCrudTest extends TestCase
         $this->authUser();
         config(['petora.tax.enabled' => true, 'petora.tax.rate' => 11, 'petora.tax.price_mode' => 'exclusive']);
         $svc = new PosService;
-        $order = $svc->createOrder(1, null, auth()->id());
+        $order = $svc->createOrder($this->primaryBranchId(), null, auth()->id());
         $product = $this->product();
 
         $item = $svc->addItem($order, $product->id, 1);

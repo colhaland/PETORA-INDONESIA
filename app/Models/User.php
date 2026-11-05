@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'phone', 'password', 'status', 'two_factor_secret', 'two_factor_confirmed_at', 'two_factor_last_counter', 'locked_until', 'last_login_at'])]
+#[Fillable(['name', 'email', 'phone', 'password', 'status'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret'])] class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */

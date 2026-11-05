@@ -20,10 +20,10 @@ class PosVoidTest extends TestCase
         $this->seed([PermissionSeeder::class, BranchSeeder::class]);
         $user = User::factory()->create();
         $user->givePermissionTo('pos.create', 'pos.void');
-        $user->branches()->sync([1]);
+        $user->branches()->sync([$this->primaryBranchId()]);
         $this->actingAs($user);
         $svc = new PosService;
-        $order = $svc->createOrder(1, null, $user->id);
+        $order = $svc->createOrder($this->primaryBranchId(), null, $user->id);
         $svc->voidOrder($order, 'Test void');
         $this->assertSame('void', $order->fresh()->status);
     }

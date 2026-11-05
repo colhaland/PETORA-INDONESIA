@@ -22,13 +22,14 @@ class BookingConflictTest extends TestCase
         $this->seed([PermissionSeeder::class, BranchSeeder::class]);
         $user = User::factory()->create();
         $user->givePermissionTo('bookings.create');
-        $user->branches()->sync([1]);
+        $branchId = $this->primaryBranchId();
+        $user->branches()->sync([$branchId]);
         $this->actingAs($user);
 
         $customer = Customer::create(['name' => 'A', 'customer_number' => 'CUS-000001']);
         Booking::create([
             'booking_number' => 'BK/TEST/1',
-            'branch_id' => 1,
+            'branch_id' => $branchId,
             'customer_id' => $customer->id,
             'resource_id' => 10,
             'type' => 'grooming',
@@ -42,7 +43,7 @@ class BookingConflictTest extends TestCase
         $svc = new BookingService;
         $this->expectException(\RuntimeException::class);
         $svc->create([
-            'branch_id' => 1,
+            'branch_id' => $branchId,
             'customer_id' => $customer->id,
             'resource_id' => 10,
             'type' => 'grooming',

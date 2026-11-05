@@ -24,7 +24,7 @@ class GroomingCrudTest extends TestCase
         $this->seed(PermissionSeeder::class);
         $this->seed(BranchSeeder::class);
         $user->givePermissionTo('grooming.create', 'grooming.checkin', 'grooming.qc', 'grooming.view', 'grooming.manage');
-        $user->branches()->sync([1]);
+        $user->branches()->sync([$this->primaryBranchId()]);
         $this->actingAs($user);
 
         return $user;
@@ -44,7 +44,7 @@ class GroomingCrudTest extends TestCase
         $c = Customer::create(['name' => 'Budi', 'customer_number' => 'CUS-000001']);
         $pet = Pet::create(['name' => 'Bobby', 'species' => 'dog', 'customer_id' => $c->id, 'pet_code' => 'PET-000001']);
         $svc = new GroomingSessionService;
-        $s = $svc->create(['branch_id' => 1, 'pet_id' => $pet->id]);
+        $s = $svc->create(['branch_id' => $this->primaryBranchId(), 'pet_id' => $pet->id]);
         $this->assertEquals('pending', $s->status);
     }
 
@@ -54,7 +54,7 @@ class GroomingCrudTest extends TestCase
         $c = Customer::create(['name' => 'Budi', 'customer_number' => 'CUS-000001']);
         $pet = Pet::create(['name' => 'Bobby', 'species' => 'dog', 'customer_id' => $c->id, 'pet_code' => 'PET-000001']);
         $svc = new GroomingSessionService;
-        $s = $svc->create(['branch_id' => 1, 'pet_id' => $pet->id]);
+        $s = $svc->create(['branch_id' => $this->primaryBranchId(), 'pet_id' => $pet->id]);
         $svc->checkIn($s);
         $this->assertEquals('checked_in', $s->fresh()->status);
     }
@@ -65,7 +65,7 @@ class GroomingCrudTest extends TestCase
         $c = Customer::create(['name' => 'Budi', 'customer_number' => 'CUS-000001']);
         $pet = Pet::create(['name' => 'Bobby', 'species' => 'dog', 'customer_id' => $c->id, 'pet_code' => 'PET-000001']);
         $svc = new GroomingSessionService;
-        $s = $svc->create(['branch_id' => 1, 'pet_id' => $pet->id]);
+        $s = $svc->create(['branch_id' => $this->primaryBranchId(), 'pet_id' => $pet->id]);
         $svc->complete($s);
         $this->assertEquals('completed', $s->fresh()->status);
     }

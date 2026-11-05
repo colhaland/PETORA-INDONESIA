@@ -114,6 +114,7 @@ class PosService
 
         return DB::transaction(function () use ($order, $method, $amount, $idempotencyKey) {
             $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+            BranchAuthorization::assertCanAccess((int) $order->branch_id);
             $amountS = Money::of($amount, 2);
             if (! Money::isPositive($amountS, 2)) {
                 throw new \InvalidArgumentException('Nominal pembayaran harus lebih besar dari nol.');
@@ -189,6 +190,10 @@ class PosService
     public function closeShift(CashShift $shift, float $closing): void
     {
         Gate::authorize('pos.cash_close');
+        BranchAuthorization::assertCanAccess((int) $shift->branch_id);
+        if ($closing < 0) {
+            throw new \InvalidArgumentException('Saldo penutupan tidak boleh negatif.');
+        }
         $shift->update(['status' => 'closed', 'closing_amount' => round($closing, 2), 'closed_at' => now()]);
         AuditService::log('cash.close', CashShift::class, $shift->id, [], ['closing_amount' => round($closing, 2)]);
     }
@@ -197,6 +202,7 @@ class PosService
     {
         Gate::authorize('pos.void');
         $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+        BranchAuthorization::assertCanAccess((int) $order->branch_id);
         if ($order->payments()->exists() && (float) $order->payments()->sum('amount') > 0) {
             throw new \RuntimeException('Order dengan pembayaran tidak dapat di-void. Gunakan refund.');
         }

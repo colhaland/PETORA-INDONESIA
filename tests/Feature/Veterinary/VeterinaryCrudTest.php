@@ -23,7 +23,7 @@ class VeterinaryCrudTest extends TestCase
         $this->seed(PermissionSeeder::class);
         $this->seed(BranchSeeder::class);
         $user->givePermissionTo('veterinary.create', 'veterinary.update', 'veterinary.view', 'medical_records.finalize', 'medical_records.create', 'medical_records.update');
-        $user->branches()->sync([1]);
+        $user->branches()->sync([$this->primaryBranchId()]);
         $this->actingAs($user);
 
         return $user;
@@ -35,7 +35,7 @@ class VeterinaryCrudTest extends TestCase
         $c = Customer::create(['name' => 'Budi', 'customer_number' => 'CUS-000001']);
         $pet = Pet::create(['name' => 'Bobby', 'species' => 'dog', 'customer_id' => $c->id, 'pet_code' => 'PET-000001']);
         $svc = new VeterinaryService;
-        $v = $svc->createVisit(['branch_id' => 1, 'pet_id' => $pet->id, 'doctor_id' => auth()->id(), 'subjective' => 'Demam']);
+        $v = $svc->createVisit(['branch_id' => $this->primaryBranchId(), 'pet_id' => $pet->id, 'doctor_id' => auth()->id(), 'subjective' => 'Demam']);
         $this->assertEquals('draft', $v->status);
     }
 
@@ -45,7 +45,7 @@ class VeterinaryCrudTest extends TestCase
         $c = Customer::create(['name' => 'Budi', 'customer_number' => 'CUS-000001']);
         $pet = Pet::create(['name' => 'Bobby', 'species' => 'dog', 'customer_id' => $c->id, 'pet_code' => 'PET-000001']);
         $svc = new VeterinaryService;
-        $v = $svc->createVisit(['branch_id' => 1, 'pet_id' => $pet->id, 'doctor_id' => auth()->id()]);
+        $v = $svc->createVisit(['branch_id' => $this->primaryBranchId(), 'pet_id' => $pet->id, 'doctor_id' => auth()->id()]);
         $svc->finalize($v);
         $this->assertEquals('final', $v->fresh()->status);
         $this->assertNotNull($v->fresh()->finalized_at);

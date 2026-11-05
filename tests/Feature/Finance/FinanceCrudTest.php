@@ -21,7 +21,7 @@ class FinanceCrudTest extends TestCase
         $this->seed(PermissionSeeder::class);
         $this->seed(BranchSeeder::class);
         $user->givePermissionTo('finance.view', 'finance.expense_create', 'finance.expense_approve', 'finance.reconcile');
-        $user->branches()->sync([1]);
+        $user->branches()->sync([$this->primaryBranchId()]);
         $this->actingAs($user);
 
         return $user;
@@ -31,7 +31,7 @@ class FinanceCrudTest extends TestCase
     {
         $this->authUser();
         $svc = new FinanceService;
-        $e = $svc->createExpense(['branch_id' => 1, 'category' => 'Operasional', 'amount' => 50000, 'created_by' => auth()->id()]);
+        $e = $svc->createExpense(['branch_id' => $this->primaryBranchId(), 'category' => 'Operasional', 'amount' => 50000, 'created_by' => auth()->id()]);
         $this->assertEquals('Operasional', $e->category);
         $this->assertEquals(50000, (float) $e->amount);
     }
@@ -40,7 +40,7 @@ class FinanceCrudTest extends TestCase
     {
         $this->authUser();
         $svc = new FinanceService;
-        $e = $svc->createExpense(['branch_id' => 1, 'category' => 'Operasional', 'amount' => 50000, 'created_by' => auth()->id()]);
+        $e = $svc->createExpense(['branch_id' => $this->primaryBranchId(), 'category' => 'Operasional', 'amount' => 50000, 'created_by' => auth()->id()]);
         $svc->approveExpense($e);
         $this->assertTrue(true);
     }
@@ -49,7 +49,7 @@ class FinanceCrudTest extends TestCase
     {
         $this->authUser();
         $svc = new FinanceService;
-        $e = $svc->createExpense(['branch_id' => 1, 'category' => 'Operasional', 'amount' => 50000, 'created_by' => auth()->id()]);
+        $e = $svc->createExpense(['branch_id' => $this->primaryBranchId(), 'category' => 'Operasional', 'amount' => 50000, 'created_by' => auth()->id()]);
         $svc->deleteExpense($e);
         $this->assertDatabaseMissing('expenses', ['id' => $e->id]);
     }

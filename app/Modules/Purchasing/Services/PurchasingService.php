@@ -37,6 +37,7 @@ class PurchasingService
     public function approve(PurchaseOrder $po): void
     {
         Gate::authorize('purchasing.approve');
+        BranchAuthorization::assertCanAccess((int) $po->branch_id);
         $po->update(['status' => 'approved']);
         AuditService::log('po.approve', PurchaseOrder::class, $po->id);
     }
@@ -44,6 +45,7 @@ class PurchasingService
     public function receive(PurchaseOrder $po, ?int $userId = null): GoodsReceipt
     {
         Gate::authorize('purchasing.receive');
+        BranchAuthorization::assertCanAccess((int) $po->branch_id);
 
         return DB::transaction(function () use ($po, $userId) {
             $po->update(['status' => 'received']);

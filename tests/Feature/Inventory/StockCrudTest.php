@@ -31,7 +31,7 @@ class StockCrudTest extends TestCase
     public function test_receive_stock(): void
     {
         $this->authUser();
-        $wh = Warehouse::create(['branch_id' => 1, 'code' => 'WH1', 'name' => 'Main']);
+        $wh = Warehouse::create(['branch_id' => $this->primaryBranchId(), 'code' => 'WH1', 'name' => 'Main']);
         $prod = Product::create(['name' => 'Food', 'sku' => 'F1']);
         $svc = new StockService;
         $svc->receive($wh->id, $prod->id, 10);

@@ -15,8 +15,11 @@ class StaffService
     public function create(array $data): User
     {
         Gate::authorize('staff.create');
-        unset($data['password']);
-        $data['password'] = Str::random(64);
+        $validated = validator($data, [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+        ])->validate();
+        $data = $validated + ['password' => Str::random(64)];
         $u = User::create($data);
         $status = Password::sendResetLink(['email' => $u->email]);
         if ($status !== Password::RESET_LINK_SENT) {
@@ -30,7 +33,11 @@ class StaffService
     public function update(User $user, array $data): User
     {
         Gate::authorize('staff.update');
-        $user->update($data);
+        $validated = validator($data, [
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'email' => ['sometimes', 'nullable', 'email', 'max:255', 'unique:users,email,'.$user->id],
+        ])->validate();
+        $user->update($validated);
 
         return $user;
     }

@@ -25,6 +25,7 @@ class GroomingSessionService
     public function checkIn(GroomingSession $session): void
     {
         Gate::authorize('grooming.checkin');
+        BranchAuthorization::assertCanAccess((int) $session->branch_id);
         $session->update(['status' => 'checked_in', 'started_at' => now()]);
         AuditService::log('grooming.checkin', GroomingSession::class, $session->id);
     }
@@ -32,6 +33,7 @@ class GroomingSessionService
     public function complete(GroomingSession $session): void
     {
         Gate::authorize('grooming.qc');
+        BranchAuthorization::assertCanAccess((int) $session->branch_id);
         $session->update(['status' => 'completed', 'completed_at' => now()]);
         AuditService::log('grooming.complete', GroomingSession::class, $session->id);
     }

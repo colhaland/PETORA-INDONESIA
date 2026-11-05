@@ -22,7 +22,7 @@ class PurchasingCrudTest extends TestCase
         $this->seed(PermissionSeeder::class);
         $this->seed(BranchSeeder::class);
         $user->givePermissionTo('purchasing.create', 'purchasing.approve', 'purchasing.receive', 'purchasing.view');
-        $user->branches()->sync([1]);
+        $user->branches()->sync([$this->primaryBranchId()]);
         $this->actingAs($user);
 
         return $user;
@@ -33,7 +33,7 @@ class PurchasingCrudTest extends TestCase
         $this->authUser();
         $supplier = Supplier::create(['name' => 'Supplier A']);
         $svc = new PurchasingService;
-        $po = $svc->createPo(1, $supplier->id, 100000, auth()->id());
+        $po = $svc->createPo($this->primaryBranchId(), $supplier->id, 100000, auth()->id());
         $this->assertNotNull($po->po_number);
         $this->assertEquals('draft', $po->status);
     }
@@ -43,7 +43,7 @@ class PurchasingCrudTest extends TestCase
         $this->authUser();
         $supplier = Supplier::create(['name' => 'Supplier A']);
         $svc = new PurchasingService;
-        $po = $svc->createPo(1, $supplier->id, 100000, auth()->id());
+        $po = $svc->createPo($this->primaryBranchId(), $supplier->id, 100000, auth()->id());
         $svc->approve($po);
         $this->assertEquals('approved', $po->fresh()->status);
     }
@@ -53,7 +53,7 @@ class PurchasingCrudTest extends TestCase
         $this->authUser();
         $supplier = Supplier::create(['name' => 'Supplier A']);
         $svc = new PurchasingService;
-        $po = $svc->createPo(1, $supplier->id, 100000, auth()->id());
+        $po = $svc->createPo($this->primaryBranchId(), $supplier->id, 100000, auth()->id());
         $svc->approve($po);
         $gr = $svc->receive($po, auth()->id());
         $this->assertEquals('received', $po->fresh()->status);

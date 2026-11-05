@@ -21,11 +21,6 @@ class TwoFactorService
         return $this->google2fa->generateSecretKey();
     }
 
-    public function verify(string $secret, string $code): bool
-    {
-        return $this->google2fa->verifyKey($secret, $code);
-    }
-
     public function decryptSecret(string $encryptedSecret): string
     {
         return Crypt::decryptString($encryptedSecret);
