@@ -6,6 +6,7 @@ namespace App\Modules\Veterinary\Services;
 
 use App\Models\MedicalVisit;
 use App\Support\AuditService;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
@@ -41,7 +42,7 @@ class VeterinaryService
             if (Schema::hasTable('medical_record_revisions')) {
                 $snapshot = json_encode($before, JSON_UNESCAPED_UNICODE);
                 try {
-                    $snapshot = \Illuminate\Support\Facades\Crypt::encryptString($snapshot);
+                    $snapshot = Crypt::encryptString($snapshot);
                 } catch (\Throwable) {
                     // keep plaintext snapshot only when app key unavailable
                 }

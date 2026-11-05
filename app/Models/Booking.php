@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\BelongsToBranch;
 use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
+    use BelongsToBranch;
+
     protected $fillable = [
         'booking_number', 'branch_id', 'customer_id', 'pet_id', 'resource_id', 'assigned_user_id',
         'type', 'scheduled_at', 'starts_at', 'ends_at', 'status', 'source', 'notes', 'cancelled_reason', 'created_by',

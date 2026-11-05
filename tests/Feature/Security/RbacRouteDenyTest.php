@@ -83,4 +83,46 @@ class RbacRouteDenyTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user)->get('/integration')->assertForbidden();
     }
+
+    public function test_user_without_permission_cannot_access_bookings(): void
+    {
+        $this->seed(PermissionSeeder::class);
+        $user = User::factory()->create();
+        $this->actingAs($user)->get('/booking')->assertForbidden();
+    }
+
+    public function test_user_without_permission_cannot_access_products(): void
+    {
+        $this->seed(PermissionSeeder::class);
+        $user = User::factory()->create();
+        $this->actingAs($user)->get('/products')->assertForbidden();
+    }
+
+    public function test_user_without_permission_cannot_access_inventory(): void
+    {
+        $this->seed(PermissionSeeder::class);
+        $user = User::factory()->create();
+        $this->actingAs($user)->get('/inventory')->assertForbidden();
+    }
+
+    public function test_user_without_permission_cannot_access_purchasing(): void
+    {
+        $this->seed(PermissionSeeder::class);
+        $user = User::factory()->create();
+        $this->actingAs($user)->get('/purchasing')->assertForbidden();
+    }
+
+    public function test_user_without_permission_cannot_access_audit(): void
+    {
+        $this->seed(PermissionSeeder::class);
+        $user = User::factory()->create();
+        $this->actingAs($user)->get('/audit')->assertForbidden();
+    }
+
+    public function test_user_without_permission_cannot_access_reports(): void
+    {
+        $this->seed(PermissionSeeder::class);
+        $user = User::factory()->create();
+        $this->actingAs($user)->get('/reports')->assertForbidden();
+    }
 }
