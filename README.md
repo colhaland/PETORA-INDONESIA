@@ -1,18 +1,20 @@
 <div align="center">
 
+<img src="https://img.shields.io/badge/PETORA-INDONESIA-1f6feb?style=for-the-badge&logo=paw&logoColor=white" alt="PETORA INDONESIA" />
+
 # 🐾 PETORA
 
 **Integrated Petshop & Pet Care Management System**
 
-Aplikasi web responsif untuk pengelolaan operasional petshop dan pet care — pelanggan, hewan, produk, stok, pembelian, POS, booking, grooming, klinik, rekam medis, farmasi, loyalty, promosi, keuangan, dan laporan — dengan dukungan multi-cabang.
+[![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?style=flat-square&logo=php&logoColor=white)](https://www.php.net/)
+[![Laravel](https://img.shields.io/badge/Laravel-11-FF2D20?style=flat-square&logo=laravel&logoColor=white)](https://laravel.com)
+[![Livewire](https://img.shields.io/badge/Livewire-3-FB70A9?style=flat-square&logo=livewire&logoColor=white)](https://livewire.laravel.com)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-[![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?logo=php&logoColor=white)](https://www.php.net/)
-[![Laravel](https://img.shields.io/badge/Laravel-11-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
-[![Livewire](https://img.shields.io/badge/Livewire-3-FB70A9?logo=livewire&logoColor=white)](https://livewire.laravel.com)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)](https://redis.io/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+*Aplikasi web responsif untuk pengelolaan operasional petshop dan pet care — pelanggan, hewan, produk, stok, pembelian, POS, booking, grooming, klinik, rekam medis, farmasi, loyalty, promosi, keuangan, dan laporan — dengan dukungan multi-cabang.*
 
 </div>
 
@@ -124,7 +126,40 @@ docs/
 └── runbook/
 ```
 
-Aturan arsitektur dan spesifikasi lengkap: [`PETORA_MTS_v2.md`](PETORA_MTS_v2.md) dan [`AGENT.md`](AGENT.md).
+---
+
+## 📸 Cuplikan Layar
+
+| Dashboard | POS | Rekam Medis |
+|---|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![POS](docs/screenshots/pos.png) | ![Medical](docs/screenshots/medical.png) |
+
+> Ganti file di `docs/screenshots/` dengan tangkapan layar aktual.
+
+---"
+
+## 💡 Mengapa PETORA?
+
+- **Satu sistem, seluruh operasional** — dari kasir hingga rekam medis dalam satu platform.
+- **Multi-cabang sejak awal** — setiap transaksi membawa `branch_id`, siap berkembang.
+- **Audit & keamanan** — 2FA, RBAC, enkripsi data medis, audit log lengkap.
+- **Stok akurat** — append-only movement, FEFO/FIFO, lock transaksi.
+- **Tanpa SPA** — Livewire + Alpine, lebih ringkas, lebih cepat dibangun.
+
+---
+
+## 🏗️ Arsitektur
+
+```mermaid
+flowchart LR
+    U[Pengguna] --> L[Livewire + Blade]
+    L --> S[Services]
+    S --> D[(PostgreSQL)]
+    S --> R[(Redis)]
+    S --> I[Integration Adapters]
+    S --> E[Domain Events]
+    E --> N[Notifikasi]
+```
 
 ---
 
@@ -298,7 +333,9 @@ Aturan arsitektur dan spesifikasi lengkap: [`PETORA_MTS_v2.md`](PETORA_MTS_v2.md
 
 ## 📄 Lisensi
 
-Dirilis di bawah [MIT License](LICENSE).
+© 2026 PETORA INDONESIA. Seluruh hak cipta dilindungi undang-undang.
+
+Perangkat lunak ini dilisensikan di bawah [MIT License](LICENSE). Seluruh hak cipta dimiliki oleh **PETORA INDONESIA**.
 
 ---
 
