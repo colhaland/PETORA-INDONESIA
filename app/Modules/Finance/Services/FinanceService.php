@@ -6,6 +6,7 @@ namespace App\Modules\Finance\Services;
 
 use App\Models\Expense;
 use App\Support\AuditService;
+use App\Support\BranchAuthorization;
 use App\Support\Money;
 use Illuminate\Support\Facades\Gate;
 
@@ -14,6 +15,7 @@ class FinanceService
     public function createExpense(array $data): Expense
     {
         Gate::authorize('finance.expense_create');
+        BranchAuthorization::assertCanAccess((int) ($data['branch_id'] ?? 0));
         if (array_key_exists('amount', $data)) {
             $data['amount'] = Money::of($data['amount'], 2);
         }

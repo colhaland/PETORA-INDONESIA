@@ -10,6 +10,12 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutVite();
+    }
+
     protected function actingAsWithPermissions(array $permissions, ?int $branchId = null): User
     {
         $this->seed(PermissionSeeder::class);

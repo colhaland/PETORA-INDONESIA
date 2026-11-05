@@ -7,6 +7,7 @@ namespace App\Modules\Booking\Services;
 use App\Models\Booking;
 use App\Models\Branch;
 use App\Support\AuditService;
+use App\Support\BranchAuthorization;
 use App\Support\DocumentNumberService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
@@ -17,6 +18,7 @@ class BookingService
     {
         Gate::authorize('bookings.create');
         $branchId = (int) ($data['branch_id'] ?? 0);
+        BranchAuthorization::assertCanAccess($branchId);
         $branchCode = $branchId ? (Branch::query()->find($branchId)?->code ?? 'PST') : 'PST';
         $data['booking_number'] = $data['booking_number'] ?? DocumentNumberService::next('BK', $branchCode);
         $data['status'] = $data['status'] ?? 'pending';

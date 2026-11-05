@@ -20,12 +20,14 @@ class EnsureTwoFactor
             return $next($request);
         }
 
+        $isEnrollmentUpdate = $request->routeIs('livewire.update')
+            && session()->has('auth.2fa_enrollment_secret');
         $requires2fa = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['Super Admin', 'Admin']);
-        if ($requires2fa && empty($user->two_factor_confirmed_at) && ! $request->routeIs('two-factor.setup')) {
+        if ($requires2fa && empty($user->two_factor_confirmed_at) && ! $request->routeIs('two-factor.setup') && ! $isEnrollmentUpdate) {
             return redirect()->route('two-factor.setup');
         }
 
-        if (! empty($user->two_factor_confirmed_at) && ! session('auth.2fa_verified') && ! $request->routeIs('two-factor.setup')) {
+        if (! empty($user->two_factor_confirmed_at) && ! session('auth.2fa_verified') && ! $request->routeIs('two-factor.setup') && ! $isEnrollmentUpdate) {
             session(['auth.2fa_pending_user_id' => $user->id, 'url.intended' => $request->fullUrl()]);
             auth()->logout();
 

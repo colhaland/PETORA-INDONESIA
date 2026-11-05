@@ -6,14 +6,13 @@ namespace App\Modules\Booking\Livewire;
 
 use App\Models\Booking;
 use App\Modules\Booking\Services\BookingService;
+use App\Support\BranchAuthorization;
 use App\Support\RecordFinder;
 use Livewire\Component;
 
 class BookingForm extends Component
 {
     public ?int $bookingId = null;
-
-    public int $branchId = 1;
 
     public int $customerId = 0;
 
@@ -25,13 +24,13 @@ class BookingForm extends Component
 
     protected function rules(): array
     {
-        return ['branchId' => 'required|integer', 'customerId' => 'required|integer', 'type' => 'required|string', 'scheduledAt' => 'required'];
+        return ['customerId' => 'required|integer', 'type' => 'required|string', 'scheduledAt' => 'required'];
     }
 
     public function save(BookingService $svc): void
     {
         $this->validate();
-        $payload = ['branch_id' => $this->branchId, 'customer_id' => $this->customerId, 'pet_id' => $this->petId, 'type' => $this->type, 'scheduled_at' => $this->scheduledAt];
+        $payload = ['branch_id' => BranchAuthorization::currentId(), 'customer_id' => $this->customerId, 'pet_id' => $this->petId, 'type' => $this->type, 'scheduled_at' => $this->scheduledAt];
         if ($this->bookingId) {
             RecordFinder::forClass(Booking::class, $this->bookingId)->update($payload);
         } else {

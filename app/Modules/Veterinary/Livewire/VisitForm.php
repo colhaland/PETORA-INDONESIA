@@ -6,6 +6,7 @@ namespace App\Modules\Veterinary\Livewire;
 
 use App\Models\MedicalVisit;
 use App\Modules\Veterinary\Services\VeterinaryService;
+use App\Support\BranchAuthorization;
 use App\Support\RecordFinder;
 use Livewire\Component;
 
@@ -13,11 +14,7 @@ class VisitForm extends Component
 {
     public ?int $visitId = null;
 
-    public int $branchId = 1;
-
     public int $petId = 0;
-
-    public int $doctorId = 0;
 
     public string $subjective = '';
 
@@ -29,11 +26,11 @@ class VisitForm extends Component
 
     public function save(VeterinaryService $svc): void
     {
-        $this->validate(['branchId' => 'required|integer', 'petId' => 'required|integer', 'doctorId' => 'required|integer']);
+        $this->validate(['petId' => 'required|integer']);
         if ($this->visitId) {
             $svc->revise(RecordFinder::forClass(MedicalVisit::class, $this->visitId), ['subjective' => $this->subjective, 'objective' => $this->objective, 'assessment' => $this->assessment, 'plan' => $this->plan]);
         } else {
-            $svc->createVisit(['branch_id' => $this->branchId, 'pet_id' => $this->petId, 'doctor_id' => $this->doctorId, 'subjective' => $this->subjective, 'objective' => $this->objective, 'assessment' => $this->assessment, 'plan' => $this->plan]);
+            $svc->createVisit(['branch_id' => BranchAuthorization::currentId(), 'pet_id' => $this->petId, 'subjective' => $this->subjective, 'objective' => $this->objective, 'assessment' => $this->assessment, 'plan' => $this->plan]);
         }
         session()->flash('success', 'Kunjungan disimpan.');
         $this->redirect(route('veterinary.index'));

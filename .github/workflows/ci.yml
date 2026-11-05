@@ -14,7 +14,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, xml, ctype, json, bcmath, sqlite, pdo_sqlite, pgsql, pdo_pgsql
+          extensions: mbstring, xml, ctype, json, bcmath, gd, zip, sqlite, pdo_sqlite, pgsql, pdo_pgsql
           coverage: none
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
@@ -26,28 +26,30 @@ jobs:
       - name: Code style (Pint, dry-run)
         run: ./vendor/bin/pint --test
       - name: Run tests
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
         run: php artisan test --compact
 
-# PostgreSQL constraint/migration check (expand as PG-specific tests are added)
   test-pgsql:
     runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: petora_test
-          POSTGRES_USER: petora
-          POSTGRES_PASSWORD: petora
+          POSTGRES_DB: petora_${{ github.run_id }}
+          POSTGRES_USER: petora_${{ github.run_id }}
+          POSTGRES_PASSWORD: ${{ github.run_id }}
         ports: ["5432:5432"]
         options: >-
-          --health-cmd="pg_isready -U petora -d petora_test"
+          --health-cmd="pg_isready -U petora_${{ github.run_id }} -d petora_${{ github.run_id }}"
           --health-interval=10s --health-timeout=5s --health-retries=5
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, xml, ctype, json, bcmath, pgsql, pdo_pgsql
+          extensions: mbstring, xml, ctype, json, bcmath, gd, zip, pgsql, pdo_pgsql
           coverage: none
       - run: composer install --no-interaction --prefer-dist
       - name: Prepare app
@@ -59,8 +61,16 @@ jobs:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
-          DB_DATABASE: petora_test
-          DB_USERNAME: petora
-          DB_PASSWORD: petora
+          DB_DATABASE: petora_${{ github.run_id }}
+          DB_USERNAME: petora_${{ github.run_id }}
+          DB_PASSWORD: ${{ github.run_id }}
         run: php artisan migrate:fresh --force
-
+      - name: Run tests (PostgreSQL)
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: petora_${{ github.run_id }}
+          DB_USERNAME: petora_${{ github.run_id }}
+          DB_PASSWORD: ${{ github.run_id }}
+        run: php artisan test --compact

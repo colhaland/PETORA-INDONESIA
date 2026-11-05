@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\GoodsReceipt;
 use App\Models\PurchaseOrder;
 use App\Support\AuditService;
+use App\Support\BranchAuthorization;
 use App\Support\DocumentNumberService;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,7 @@ class PurchasingService
     public function createPo(int $branchId, int $supplierId, float $total, ?int $userId = null): PurchaseOrder
     {
         Gate::authorize('purchasing.create');
+        BranchAuthorization::assertCanAccess($branchId);
         $branchCode = Branch::query()->find($branchId)?->code ?? 'PST';
         $po = PurchaseOrder::create([
             'po_number' => DocumentNumberService::next('PO', $branchCode),

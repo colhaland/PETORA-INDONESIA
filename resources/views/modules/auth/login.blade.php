@@ -13,5 +13,7 @@
             @error('password') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
         <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded">Masuk</button>
+        <a href="{{ route('password.request') }}">Lupa kata sandi?</a>
+        @if (session('status')) <p role="status">{{ session('status') }}</p> @endif
     </form>
 </div>

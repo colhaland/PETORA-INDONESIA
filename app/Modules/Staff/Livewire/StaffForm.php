@@ -7,6 +7,7 @@ namespace App\Modules\Staff\Livewire;
 use App\Models\User;
 use App\Modules\Staff\Services\StaffService;
 use App\Support\RecordFinder;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class StaffForm extends Component
@@ -19,7 +20,15 @@ class StaffForm extends Component
 
     protected function rules(): array
     {
-        return ['name' => 'required|string|max:255', 'email' => 'nullable|email|max:255'];
+        return [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                $this->staffId ? 'nullable' : 'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($this->staffId),
+            ],
+        ];
     }
 
     public function save(StaffService $svc): void
@@ -28,7 +37,7 @@ class StaffForm extends Component
         if ($this->staffId) {
             $svc->update(RecordFinder::forClass(User::class, $this->staffId), ['name' => $this->name, 'email' => $this->email]);
         } else {
-            $svc->create(['name' => $this->name, 'email' => $this->email, 'password' => bcrypt('password')]);
+            $svc->create(['name' => $this->name, 'email' => $this->email]);
         }
         session()->flash('success', 'Staf disimpan.');
         $this->redirect(route('staff.index'));

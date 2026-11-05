@@ -7,14 +7,13 @@ namespace App\Modules\Grooming\Livewire;
 use App\Models\GroomingService;
 use App\Models\GroomingSession;
 use App\Modules\Grooming\Services\GroomingSessionService;
+use App\Support\BranchAuthorization;
 use App\Support\RecordFinder;
 use Livewire\Component;
 
 class GroomingForm extends Component
 {
     public ?int $sessionId = null;
-
-    public int $branchId = 1;
 
     public int $petId = 0;
 
@@ -24,8 +23,8 @@ class GroomingForm extends Component
 
     public function save(GroomingSessionService $svc): void
     {
-        $this->validate(['branchId' => 'required|integer', 'petId' => 'required|integer']);
-        $payload = ['branch_id' => $this->branchId, 'pet_id' => $this->petId, 'grooming_service_id' => $this->serviceId, 'groomer_id' => $this->groomerId];
+        $this->validate(['petId' => 'required|integer']);
+        $payload = ['branch_id' => BranchAuthorization::currentId(), 'pet_id' => $this->petId, 'grooming_service_id' => $this->serviceId, 'groomer_id' => $this->groomerId];
         if ($this->sessionId) {
             RecordFinder::forClass(GroomingSession::class, $this->sessionId)->update($payload);
         } else {

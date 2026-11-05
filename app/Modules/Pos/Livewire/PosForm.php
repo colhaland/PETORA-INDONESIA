@@ -6,6 +6,7 @@ namespace App\Modules\Pos\Livewire;
 
 use App\Models\Order;
 use App\Modules\Pos\Services\PosService;
+use App\Support\BranchAuthorization;
 use Livewire\Component;
 
 class PosForm extends Component
@@ -14,12 +15,8 @@ class PosForm extends Component
 
     public function mount(PosService $svc): void
     {
-        try {
-            $order = $svc->createOrder(1, null, auth()->id() ?? 1);
-            $this->orderId = $order->id;
-        } catch (\Throwable $e) {
-            $this->orderId = null;
-        }
+        $order = $svc->createOrder(BranchAuthorization::currentId(), null, auth()->id());
+        $this->orderId = $order->id;
     }
 
     public function render()

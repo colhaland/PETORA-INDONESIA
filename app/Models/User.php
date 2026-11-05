@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'phone', 'password', 'status', 'two_factor_secret', 'two_factor_confirmed_at', 'locked_until', 'last_login_at'])]
+#[Fillable(['name', 'email', 'phone', 'password', 'status', 'two_factor_secret', 'two_factor_confirmed_at', 'two_factor_last_counter', 'locked_until', 'last_login_at'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret'])] class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -30,6 +30,8 @@ use Spatie\Permission\Traits\HasRoles;
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_confirmed_at' => 'datetime',
+            'two_factor_last_counter' => 'integer',
         ];
     }
 
@@ -44,10 +46,11 @@ use Spatie\Permission\Traits\HasRoles;
 
     public function branchIds(): array
     {
-        try {
-            return $this->branches()->pluck('branches.id')->all();
-        } catch (\Throwable) {
-            return [];
-        }
+        return $this->branches()->pluck('branches.id')->all();
+    }
+
+    public function twoFactorRecoveryCodes()
+    {
+        return $this->hasMany(TwoFactorRecoveryCode::class);
     }
 }

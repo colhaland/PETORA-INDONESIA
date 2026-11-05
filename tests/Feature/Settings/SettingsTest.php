@@ -15,6 +15,7 @@ class SettingsTest extends TestCase
 
     public function test_page_loads(): void
     {
+        $this->withoutVite();
         $user = User::factory()->create();
         $this->seed(PermissionSeeder::class);
         $user->givePermissionTo('settings.view');

@@ -6,6 +6,7 @@ namespace App\Modules\Grooming\Services;
 
 use App\Models\GroomingSession;
 use App\Support\AuditService;
+use App\Support\BranchAuthorization;
 use Illuminate\Support\Facades\Gate;
 
 class GroomingSessionService
@@ -13,6 +14,7 @@ class GroomingSessionService
     public function create(array $data): GroomingSession
     {
         Gate::authorize('grooming.create');
+        BranchAuthorization::assertCanAccess((int) ($data['branch_id'] ?? 0));
         $data['status'] = $data['status'] ?? 'pending';
         $s = GroomingSession::create($data);
         AuditService::log('grooming_session.create', GroomingSession::class, $s->id);
