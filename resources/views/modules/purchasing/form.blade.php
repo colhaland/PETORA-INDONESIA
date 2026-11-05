@@ -1,0 +1,1 @@
+<form wire:submit="save"><select wire:model="supplierId"><option value="">Pilih Supplier</option>@foreach($suppliers as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach</select><input wire:model="total" placeholder="Total"><button type="submit">Simpan</button></form>

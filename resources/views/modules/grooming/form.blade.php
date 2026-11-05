@@ -1,0 +1,1 @@
+<form wire:submit="save"><input wire:model="petId" placeholder="Pet ID"><select wire:model="serviceId"><option value="">Layanan</option>@foreach($services as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach</select><button type="submit">Simpan</button></form>

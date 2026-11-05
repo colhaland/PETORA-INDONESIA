@@ -1,0 +1,1 @@
+<form wire:submit="save"><input wire:model="petId" placeholder="Pet ID"><input wire:model="doctorId" placeholder="Dokter ID"><textarea wire:model="subjective" placeholder="Subjektif"></textarea><button type="submit">Simpan</button></form>

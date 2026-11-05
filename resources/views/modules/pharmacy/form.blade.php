@@ -1,0 +1,1 @@
+<form wire:submit="save"><input wire:model="name" placeholder="Nama"><select wire:model="category"><option value="medicine">Obat</option><option value="vaccine">Vaksin</option><option value="supplement">Suplemen</option></select><button type="submit">Simpan</button></form>
