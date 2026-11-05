@@ -157,10 +157,18 @@ return [
         'default' => [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
+            'scheme' => env('REDIS_SCHEME'),
             'username' => env('REDIS_USERNAME'),
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_DB', '0'),
+            'context' => [
+                'stream' => [
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                    'cafile' => env('REDIS_SSL_CA'),
+                ],
+            ],
             'max_retries' => env('REDIS_MAX_RETRIES', 3),
             'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
@@ -168,12 +176,20 @@ return [
         ],
 
         'cache' => [
-            'url' => env('REDIS_URL'),
+            'url' => env('REDIS_CACHE_URL', env('REDIS_URL')),
             'host' => env('REDIS_HOST', '127.0.0.1'),
+            'scheme' => env('REDIS_SCHEME'),
             'username' => env('REDIS_USERNAME'),
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_CACHE_DB', '1'),
+            'context' => [
+                'stream' => [
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                    'cafile' => env('REDIS_SSL_CA'),
+                ],
+            ],
             'max_retries' => env('REDIS_MAX_RETRIES', 3),
             'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),

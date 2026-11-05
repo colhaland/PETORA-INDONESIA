@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\LogoutController;
 use App\Modules\Accounting\Livewire\AccountingList;
 use App\Modules\Attendance\Livewire\AttendanceList;
 use App\Modules\Audit\Livewire\AuditLogList;
@@ -20,7 +23,6 @@ use App\Modules\CustomerPortal\Livewire\CustomerPortalList;
 use App\Modules\Customers\Livewire\CustomerDetail;
 use App\Modules\Customers\Livewire\CustomerForm;
 use App\Modules\Customers\Livewire\CustomerList;
-use App\Modules\Dashboard\Services\DashboardService;
 use App\Modules\Finance\Livewire\FinanceForm;
 use App\Modules\Finance\Livewire\FinanceList;
 use App\Modules\Grooming\Livewire\GroomingForm;
@@ -67,13 +69,8 @@ Route::middleware('guest')->group(function () {
     Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
     Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.update');
 });
-Route::post('/logout', function () {
-    auth()->logout();
-    session()->invalidate();
-    session()->regenerateToken();
-
-    return redirect('/login');
-})->name('logout');
+Route::post('/logout', LogoutController::class)->name('logout');
+Route::get('/health', HealthCheckController::class)->middleware('throttle:10,1')->name('health');
 
 Route::middleware(['auth', 'ensure.2fa'])->group(function () {
     Route::get('/integration', IntegrationList::class)->name('integration.index')->middleware('can:integrations.view');
@@ -129,6 +126,6 @@ Route::middleware(['auth', 'ensure.2fa'])->group(function () {
     Route::get('/products', ProductList::class)->name('products.index')->middleware('can:products.view');
     Route::get('/customers', CustomerList::class)->name('customers.index')->middleware('can:customers.view');
     Route::get('/customers/create', CustomerForm::class)->name('customers.create')->middleware('can:customers.create');
-    Route::get('/', fn (DashboardService $service) => view('dashboard', $service->summary()))->name('dashboard')->middleware('can:dashboard.view');
+    Route::get('/', DashboardController::class)->name('dashboard')->middleware('can:dashboard.view');
     Route::get('/customers/{id}', CustomerDetail::class)->name('customers.show')->middleware('can:customers.view');
 });

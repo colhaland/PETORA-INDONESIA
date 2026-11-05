@@ -58,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
             'MAIL_USERNAME' => config('mail.mailers.smtp.username'),
             'MAIL_PASSWORD' => config('mail.mailers.smtp.password'),
             'MAIL_SCHEME' => config('mail.mailers.smtp.scheme'),
+            'HEALTHCHECK_TOKEN' => config('services.healthcheck.token'),
         ] as $name => $value) {
             if (! is_string($value) || trim($value) === '') {
                 $missing[] = $name;

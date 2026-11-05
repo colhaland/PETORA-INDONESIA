@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\BootstrapAdmin;
+use App\Console\Commands\MigrateWithAdvisoryLock;
 use App\Modules\Auth\Middleware\EnsureTwoFactor;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -13,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withCommands([BootstrapAdmin::class])
+    ->withCommands([BootstrapAdmin::class, MigrateWithAdvisoryLock::class])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'ensure.2fa' => EnsureTwoFactor::class,

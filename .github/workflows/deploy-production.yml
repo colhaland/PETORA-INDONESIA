@@ -1,0 +1,82 @@
+name: Deploy production
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      startsWith(github.event.workflow_run.head_branch, 'v') &&
+      vars.PRODUCTION_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy release image by SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.PRODUCTION_HOST }}
+          DEPLOY_USER: ${{ secrets.PRODUCTION_USER }}
+          DEPLOY_REPOSITORY_PATH: ${{ secrets.PRODUCTION_REPOSITORY_PATH }}
+          DEPLOY_SSH_KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.PRODUCTION_KNOWN_HOSTS }}
+          DEPLOY_TAG: ${{ github.event.workflow_run.head_branch }}
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" =~ ^[A-Za-z0-9.-]+$ ]]
+          [[ "$DEPLOY_USER" =~ ^[A-Za-z0-9._-]+$ ]]
+          [[ "$DEPLOY_REPOSITORY_PATH" =~ ^/[A-Za-z0-9._/-]+$ ]]
+          [[ "$DEPLOY_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][A-Za-z0-9.-]+)?$ ]]
+          [[ "$DEPLOY_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test -n "$DEPLOY_SSH_KEY"
+          test -n "$DEPLOY_KNOWN_HOSTS"
+
+          install -d -m 0700 "$HOME/.ssh"
+          key_file="$(mktemp)"
+          trap 'rm -f "$key_file"' EXIT
+          chmod 0600 "$key_file"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$key_file"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/known_hosts"
+
+          ssh -i "$key_file" -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "bash -s -- '$DEPLOY_REPOSITORY_PATH' '$DEPLOY_SHA' '$DEPLOY_TAG' '/etc/petora/.env.production' '/var/lib/petora'" <<'REMOTE'
+          set -Eeuo pipefail
+          repository="$1"
+          sha="$2"
+          image_tag="$3"
+          env_file="$4"
+          state_dir="$5"
+          release_dir="${state_dir}/releases/${sha}"
+          added=false
+
+          cleanup() {
+            status=$?
+            trap - EXIT
+            if [[ "$added" == true ]] && ! git -C "$repository" worktree remove "$release_dir"; then
+              echo "Failed to clean up temporary deployment worktree: $release_dir" >&2
+              status=1
+            fi
+            exit "$status"
+          }
+          trap cleanup EXIT
+
+          mkdir -p "${state_dir}/releases"
+          chmod 0700 "$state_dir" "${state_dir}/releases"
+          if [[ -e "$release_dir" ]]; then
+            echo "Temporary release path already exists; inspect it before retrying." >&2
+            exit 1
+          fi
+          git -C "$repository" fetch --no-tags origin "$sha"
+          git -C "$repository" worktree add --detach "$release_dir" "$sha"
+          added=true
+          PETORA_ENV_FILE="$env_file" PETORA_DEPLOY_STATE_DIR="$state_dir" \
+            "$release_dir/scripts/deploy.sh" "$image_tag"
+          REMOTE

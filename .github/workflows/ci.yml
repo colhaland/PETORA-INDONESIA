@@ -3,8 +3,12 @@ name: CI
 on:
   push:
     branches: [main, develop, "feature/**", "fix/**"]
+    tags: ["v*.*.*"]
   pull_request:
     branches: [main, develop]
+
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -18,11 +22,23 @@ jobs:
           coverage: none
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
+      - name: Audit Composer dependencies
+        run: composer audit --no-interaction
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
       - name: Prepare app
         run: |
           cp .env.example .env
           php artisan key:generate
           mkdir -p database && touch database/database.sqlite
+      - name: Install and audit npm dependencies
+        run: |
+          npm ci
+          npm audit --audit-level=high
+      - name: Build frontend assets
+        run: npm run build
       - name: Code style (Pint, dry-run)
         run: ./vendor/bin/pint --test
       - name: Run tests
@@ -74,3 +90,75 @@ jobs:
           DB_USERNAME: petora_${{ github.run_id }}
           DB_PASSWORD: ${{ github.run_id }}
         run: php artisan test --compact
+
+  build-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build production image targets
+        run: |
+          docker buildx build --progress=plain --target app --tag petora-ci-app .
+          docker buildx build --progress=plain --target web --tag petora-ci-web .
+          docker buildx build --progress=plain --target backup --tag petora-ci-backup .
+
+  publish-images:
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
+    needs: [test, test-pgsql, build-images]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Prepare image tags
+        id: tags
+        env:
+          REPOSITORY: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+          REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+        run: |
+          repository="$(printf '%s' "$REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          printf 'repository=ghcr.io/%s/petora-indonesia\n' "${repository%%/*}" >> "$GITHUB_OUTPUT"
+          {
+            printf 'tags=%s\n' "$SHA"
+            if [[ "$REF" == refs/heads/develop ]]; then
+              printf 'develop\n'
+            elif [[ "$REF" == refs/tags/v* ]]; then
+              if [[ ! "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][A-Za-z0-9.-]+)?$ ]]; then
+                echo "Release tags must follow vMAJOR.MINOR.PATCH[-PRERELEASE]." >&2
+                exit 1
+              fi
+              printf '%s\n' "$REF_NAME"
+            fi
+          } > "$RUNNER_TEMP/image-tags"
+          {
+            echo 'tags<<EOF'
+            cat "$RUNNER_TEMP/image-tags"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+      - name: Log in to GitHub Container Registry
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Publish application, web, and backup images
+        env:
+          IMAGE_REPOSITORY: ${{ steps.tags.outputs.repository }}
+          IMAGE_TAGS: ${{ steps.tags.outputs.tags }}
+        run: |
+          while IFS= read -r tag; do
+            [[ -z "$tag" ]] && continue
+            [[ "$tag" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]] || {
+              echo "Invalid image tag." >&2
+              exit 1
+            }
+            for target in app web backup; do
+              docker buildx build --progress=plain --target "$target" \
+                --tag "${IMAGE_REPOSITORY}-${target}:${tag}" --push .
+            done
+          done <<< "$IMAGE_TAGS"
