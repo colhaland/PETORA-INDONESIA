@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'email', 'phone', 'password', 'status', 'two_factor_secret', 'two_factor_confirmed_at', 'locked_until', 'last_login_at'])]
@@ -34,11 +35,19 @@ use Spatie\Permission\Traits\HasRoles;
 
     public function branches()
     {
+        if (Schema::hasTable('user_branch_access')) {
+            return $this->belongsToMany(Branch::class, 'user_branch_access')->withTimestamps();
+        }
+
         return $this->belongsToMany(Branch::class, 'branch_user');
     }
 
     public function branchIds(): array
     {
-        return $this->branches()->pluck('branches.id')->all();
+        try {
+            return $this->branches()->pluck('branches.id')->all();
+        } catch (\Throwable) {
+            return [];
+        }
     }
 }

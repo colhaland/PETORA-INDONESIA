@@ -6,6 +6,7 @@ namespace App\Modules\Staff\Livewire;
 
 use App\Models\User;
 use App\Modules\Staff\Services\StaffService;
+use App\Support\RecordFinder;
 use Livewire\Component;
 
 class StaffForm extends Component
@@ -25,7 +26,7 @@ class StaffForm extends Component
     {
         $this->validate();
         if ($this->staffId) {
-            $svc->update(User::findOrFail($this->staffId), ['name' => $this->name, 'email' => $this->email]);
+            $svc->update(RecordFinder::forClass(User::class, $this->staffId), ['name' => $this->name, 'email' => $this->email]);
         } else {
             $svc->create(['name' => $this->name, 'email' => $this->email, 'password' => bcrypt('password')]);
         }

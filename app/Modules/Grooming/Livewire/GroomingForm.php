@@ -7,6 +7,7 @@ namespace App\Modules\Grooming\Livewire;
 use App\Models\GroomingService;
 use App\Models\GroomingSession;
 use App\Modules\Grooming\Services\GroomingSessionService;
+use App\Support\RecordFinder;
 use Livewire\Component;
 
 class GroomingForm extends Component
@@ -24,10 +25,11 @@ class GroomingForm extends Component
     public function save(GroomingSessionService $svc): void
     {
         $this->validate(['branchId' => 'required|integer', 'petId' => 'required|integer']);
+        $payload = ['branch_id' => $this->branchId, 'pet_id' => $this->petId, 'grooming_service_id' => $this->serviceId, 'groomer_id' => $this->groomerId];
         if ($this->sessionId) {
-            GroomingSession::findOrFail($this->sessionId)->update(['branch_id' => $this->branchId, 'pet_id' => $this->petId, 'grooming_service_id' => $this->serviceId, 'groomer_id' => $this->groomerId]);
+            RecordFinder::forClass(GroomingSession::class, $this->sessionId)->update($payload);
         } else {
-            $svc->create(['branch_id' => $this->branchId, 'pet_id' => $this->petId, 'grooming_service_id' => $this->serviceId, 'groomer_id' => $this->groomerId]);
+            $svc->create($payload);
         }
         session()->flash('success', 'Grooming disimpan.');
         $this->redirect(route('grooming.index'));

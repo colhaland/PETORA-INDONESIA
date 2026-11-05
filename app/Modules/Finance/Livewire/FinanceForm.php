@@ -6,6 +6,7 @@ namespace App\Modules\Finance\Livewire;
 
 use App\Models\Expense;
 use App\Modules\Finance\Services\FinanceService;
+use App\Support\RecordFinder;
 use Livewire\Component;
 
 class FinanceForm extends Component
@@ -29,7 +30,7 @@ class FinanceForm extends Component
     {
         $this->validate();
         if ($this->expenseId) {
-            $svc->deleteExpense(Expense::findOrFail($this->expenseId));
+            $svc->deleteExpense(RecordFinder::forClass(Expense::class, $this->expenseId));
         }
         $svc->createExpense(['branch_id' => $this->branchId, 'category' => $this->category, 'amount' => $this->amount, 'description' => $this->description, 'created_by' => auth()->id()]);
         session()->flash('success', 'Pengeluaran disimpan.');

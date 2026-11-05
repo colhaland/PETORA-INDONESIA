@@ -6,6 +6,7 @@ namespace App\Modules\Pets\Livewire;
 
 use App\Models\Pet;
 use App\Modules\Pets\Services\PetService;
+use App\Support\RecordFinder;
 use Livewire\Component;
 
 class PetForm extends Component
@@ -27,7 +28,7 @@ class PetForm extends Component
     {
         $this->validate();
         if ($this->petId) {
-            $svc->update(Pet::findOrFail($this->petId), ['name' => $this->name, 'species' => $this->species, 'customer_id' => $this->customerId]);
+            $svc->update(RecordFinder::forClass(Pet::class, $this->petId), ['name' => $this->name, 'species' => $this->species, 'customer_id' => $this->customerId]);
         } else {
             $svc->create(['name' => $this->name, 'species' => $this->species, 'customer_id' => $this->customerId]);
         }
@@ -38,7 +39,7 @@ class PetForm extends Component
     public function delete(PetService $svc): void
     {
         if ($this->petId) {
-            $svc->delete(Pet::findOrFail($this->petId));
+            $svc->delete(RecordFinder::forClass(Pet::class, $this->petId));
         }
         session()->flash('success', 'Hewan dihapus.');
         $this->redirect(route('pets.index'));
@@ -47,7 +48,7 @@ class PetForm extends Component
     public function render()
     {
         if ($this->petId && empty($this->name)) {
-            $p = Pet::find($this->petId);
+            $p = Pet::query()->find($this->petId);
             if ($p) {
                 $this->name = $p->name;
                 $this->species = $p->species;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Staff\Livewire;
 
 use App\Models\User;
+use App\Support\RecordFinder;
 use Livewire\Component;
 
 class StaffDetail extends Component
@@ -13,7 +14,7 @@ class StaffDetail extends Component
 
     public function mount(int $id): void
     {
-        $this->staff = User::findOrFail($id);
+        $this->staff = RecordFinder::forClass(User::class, $id);
     }
 
     public function render()

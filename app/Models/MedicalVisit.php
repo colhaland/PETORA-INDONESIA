@@ -14,6 +14,10 @@ class MedicalVisit extends Model
     ];
 
     protected $casts = [
+        'subjective' => 'encrypted',
+        'objective' => 'encrypted',
+        'assessment' => 'encrypted',
+        'plan' => 'encrypted',
         'visible_to_owner' => 'boolean',
         'finalized_at' => 'datetime',
     ];

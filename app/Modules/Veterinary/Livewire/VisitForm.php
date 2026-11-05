@@ -6,6 +6,7 @@ namespace App\Modules\Veterinary\Livewire;
 
 use App\Models\MedicalVisit;
 use App\Modules\Veterinary\Services\VeterinaryService;
+use App\Support\RecordFinder;
 use Livewire\Component;
 
 class VisitForm extends Component
@@ -30,7 +31,7 @@ class VisitForm extends Component
     {
         $this->validate(['branchId' => 'required|integer', 'petId' => 'required|integer', 'doctorId' => 'required|integer']);
         if ($this->visitId) {
-            $svc->revise(MedicalVisit::findOrFail($this->visitId), ['subjective' => $this->subjective, 'objective' => $this->objective, 'assessment' => $this->assessment, 'plan' => $this->plan]);
+            $svc->revise(RecordFinder::forClass(MedicalVisit::class, $this->visitId), ['subjective' => $this->subjective, 'objective' => $this->objective, 'assessment' => $this->assessment, 'plan' => $this->plan]);
         } else {
             $svc->createVisit(['branch_id' => $this->branchId, 'pet_id' => $this->petId, 'doctor_id' => $this->doctorId, 'subjective' => $this->subjective, 'objective' => $this->objective, 'assessment' => $this->assessment, 'plan' => $this->plan]);
         }
@@ -41,7 +42,7 @@ class VisitForm extends Component
     public function finalize(VeterinaryService $svc): void
     {
         if ($this->visitId) {
-            $svc->finalize(MedicalVisit::findOrFail($this->visitId));
+            $svc->finalize(RecordFinder::forClass(MedicalVisit::class, $this->visitId));
             session()->flash('success', 'Kunjungan difinalisasi.');
             $this->redirect(route('veterinary.index'));
         }

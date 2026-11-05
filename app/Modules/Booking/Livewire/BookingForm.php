@@ -6,6 +6,7 @@ namespace App\Modules\Booking\Livewire;
 
 use App\Models\Booking;
 use App\Modules\Booking\Services\BookingService;
+use App\Support\RecordFinder;
 use Livewire\Component;
 
 class BookingForm extends Component
@@ -30,10 +31,11 @@ class BookingForm extends Component
     public function save(BookingService $svc): void
     {
         $this->validate();
+        $payload = ['branch_id' => $this->branchId, 'customer_id' => $this->customerId, 'pet_id' => $this->petId, 'type' => $this->type, 'scheduled_at' => $this->scheduledAt];
         if ($this->bookingId) {
-            Booking::findOrFail($this->bookingId)->update(['branch_id' => $this->branchId, 'customer_id' => $this->customerId, 'pet_id' => $this->petId, 'type' => $this->type, 'scheduled_at' => $this->scheduledAt]);
+            RecordFinder::forClass(Booking::class, $this->bookingId)->update($payload);
         } else {
-            $svc->create(['branch_id' => $this->branchId, 'customer_id' => $this->customerId, 'pet_id' => $this->petId, 'type' => $this->type, 'scheduled_at' => $this->scheduledAt]);
+            $svc->create($payload);
         }
         session()->flash('success', 'Booking disimpan.');
         $this->redirect(route('booking.index'));

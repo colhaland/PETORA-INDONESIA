@@ -6,6 +6,7 @@ namespace App\Modules\Pharmacy\Livewire;
 
 use App\Models\Medicine;
 use App\Modules\Pharmacy\Services\PharmacyService;
+use App\Support\RecordFinder;
 use Livewire\Component;
 
 class PharmacyForm extends Component
@@ -25,7 +26,7 @@ class PharmacyForm extends Component
     {
         $this->validate();
         if ($this->medicineId) {
-            $svc->update(Medicine::findOrFail($this->medicineId), ['name' => $this->name, 'category' => $this->category]);
+            $svc->update(RecordFinder::forClass(Medicine::class, $this->medicineId), ['name' => $this->name, 'category' => $this->category]);
         } else {
             $svc->create(['name' => $this->name, 'category' => $this->category]);
         }
@@ -36,7 +37,7 @@ class PharmacyForm extends Component
     public function delete(PharmacyService $svc): void
     {
         if ($this->medicineId) {
-            $svc->delete(Medicine::findOrFail($this->medicineId));
+            $svc->delete(RecordFinder::forClass(Medicine::class, $this->medicineId));
         }
         session()->flash('success', 'Obat dihapus.');
         $this->redirect(route('pharmacy.index'));
@@ -45,7 +46,7 @@ class PharmacyForm extends Component
     public function render()
     {
         if ($this->medicineId && empty($this->name)) {
-            $m = Medicine::find($this->medicineId);
+            $m = Medicine::query()->find($this->medicineId);
             if ($m) {
                 $this->name = $m->name;
                 $this->category = $m->category;

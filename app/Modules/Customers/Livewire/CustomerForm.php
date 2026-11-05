@@ -6,6 +6,7 @@ namespace App\Modules\Customers\Livewire;
 
 use App\Models\Customer;
 use App\Modules\Customers\Services\CustomerService;
+use App\Support\RecordFinder;
 use Livewire\Component;
 
 class CustomerForm extends Component
@@ -27,7 +28,7 @@ class CustomerForm extends Component
     {
         $this->validate();
         if ($this->customerId) {
-            $svc->update(Customer::findOrFail($this->customerId), ['name' => $this->name, 'phone' => $this->phone, 'email' => $this->email]);
+            $svc->update(RecordFinder::forClass(Customer::class, $this->customerId), ['name' => $this->name, 'phone' => $this->phone, 'email' => $this->email]);
         } else {
             $svc->create(['name' => $this->name, 'phone' => $this->phone, 'email' => $this->email]);
         }
@@ -38,7 +39,7 @@ class CustomerForm extends Component
     public function delete(CustomerService $svc): void
     {
         if ($this->customerId) {
-            $svc->delete(Customer::findOrFail($this->customerId));
+            $svc->delete(RecordFinder::forClass(Customer::class, $this->customerId));
         }
         session()->flash('success', 'Pelanggan dihapus.');
         $this->redirect(route('customers.index'));
@@ -47,7 +48,7 @@ class CustomerForm extends Component
     public function render()
     {
         if ($this->customerId && empty($this->name)) {
-            $c = Customer::find($this->customerId);
+            $c = Customer::query()->find($this->customerId);
             if ($c) {
                 $this->name = $c->name;
                 $this->phone = $c->phone;

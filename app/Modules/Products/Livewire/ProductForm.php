@@ -6,6 +6,7 @@ namespace App\Modules\Products\Livewire;
 
 use App\Models\Product;
 use App\Modules\Products\Services\ProductService;
+use App\Support\RecordFinder;
 use Livewire\Component;
 
 class ProductForm extends Component
@@ -27,7 +28,7 @@ class ProductForm extends Component
     {
         $this->validate();
         if ($this->productId) {
-            $svc->update(Product::findOrFail($this->productId), ['name' => $this->name, 'sku' => $this->sku, 'sell_price' => $this->sellPrice]);
+            $svc->update(RecordFinder::forClass(Product::class, $this->productId), ['name' => $this->name, 'sku' => $this->sku, 'sell_price' => $this->sellPrice]);
         } else {
             $svc->create(['name' => $this->name, 'sku' => $this->sku, 'sell_price' => $this->sellPrice]);
         }
@@ -38,7 +39,7 @@ class ProductForm extends Component
     public function delete(ProductService $svc): void
     {
         if ($this->productId) {
-            $svc->delete(Product::findOrFail($this->productId));
+            $svc->delete(RecordFinder::forClass(Product::class, $this->productId));
         }
         session()->flash('success', 'Produk dihapus.');
         $this->redirect(route('products.index'));
@@ -47,7 +48,7 @@ class ProductForm extends Component
     public function render()
     {
         if ($this->productId && empty($this->name)) {
-            $p = Product::find($this->productId);
+            $p = Product::query()->find($this->productId);
             if ($p) {
                 $this->name = $p->name;
                 $this->sku = $p->sku;
