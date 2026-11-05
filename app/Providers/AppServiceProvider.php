@@ -21,8 +21,14 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
 
-            if (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo($ability)) {
-                return true;
+            if (method_exists($user, 'hasPermissionTo')) {
+                try {
+                    if ($user->hasPermissionTo($ability)) {
+                        return true;
+                    }
+                } catch (\Throwable) {
+                    return null;
+                }
             }
 
             return null;

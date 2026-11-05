@@ -45,6 +45,29 @@ class PosCrudTest extends TestCase
         $svc->closeShift($shift, 120000);
         $this->assertEquals('closed', $shift->fresh()->status);
     }
+    public function test_cannot_add_item_to_paid_order(): void
+    {
+        $this->authUser();
+        $svc = new PosService();
+        $order = $svc->createOrder(1, null, auth()->id());
+        $svc->addItem($order, 'Makanan', 1, 10000);
+        $svc->pay($order, 'cash', 10000);
+        $this->expectException(\RuntimeException::class);
+        $svc->addItem($order->fresh(), 'Extra', 1, 5000);
+    }
+
+    public function test_pay_sets_paid_at(): void
+    {
+        $this->authUser();
+        $svc = new PosService();
+        $order = $svc->createOrder(1, null, auth()->id());
+        $svc->addItem($order, 'Makanan', 1, 10000);
+        $svc->pay($order, 'cash', 10000, 'idem-key-1');
+        $fresh = $order->fresh();
+        $this->assertEquals('paid', $fresh->status);
+        $this->assertNotNull($fresh->paid_at);
+    }
+
     public function test_list_page_loads(): void
     {
         $this->authUser();

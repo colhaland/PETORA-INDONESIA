@@ -45,7 +45,7 @@ class PermissionSeeder extends Seeder
             'commission' => ['view', 'manage', 'approve', 'pay'],
             'finance' => ['view', 'expense_create', 'expense_approve', 'reconcile'],
             'reports' => ['view', 'export'],
-            'notifications' => ['manage_templates'],
+            'notifications' => ['view', 'manage_templates'],
             'settings' => ['view', 'manage'],
             'audit' => ['view'],
             'integrations' => ['view', 'manage', 'test'],

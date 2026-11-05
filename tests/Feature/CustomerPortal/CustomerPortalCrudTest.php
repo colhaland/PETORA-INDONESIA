@@ -11,6 +11,8 @@ class CustomerPortalCrudTest extends TestCase
     private function authUser(): User
     {
         $user = User::factory()->create();
+        $this->seed(\Database\Seeders\PermissionSeeder::class);
+        $user->givePermissionTo('portal.view');
         $this->actingAs($user);
         return $user;
     }

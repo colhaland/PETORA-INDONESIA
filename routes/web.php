@@ -14,7 +14,7 @@ Route::post('/logout', function () {
 })->name('logout');
 
 Route::middleware(['auth', 'ensure.2fa'])->group(function () {
-    Route::get('/integration', \App\Modules\Integration\Livewire\IntegrationList::class)->name('integration.index');
+    Route::get('/integration', \App\Modules\Integration\Livewire\IntegrationList::class)->name('integration.index')->middleware('can:integrations.view');
     Route::get('/customer-portal', \App\Modules\CustomerPortal\Livewire\CustomerPortalList::class)->name('customer-portal.index')->middleware('can:portal.view');
     Route::get('/consignment', \App\Modules\Consignment\Livewire\ConsignmentList::class)->name('consignment.index')->middleware('can:consignment.view');
     Route::get('/accounting', \App\Modules\Accounting\Livewire\AccountingList::class)->name('accounting.index')->middleware('can:accounting.view');
@@ -29,7 +29,8 @@ Route::middleware(['auth', 'ensure.2fa'])->group(function () {
     Route::get('/staff', \App\Modules\Staff\Livewire\StaffList::class)->name('staff.index')->middleware('can:staff.view');
     Route::get('/staff/create', \App\Modules\Staff\Livewire\StaffForm::class)->name('staff.create')->middleware('can:staff.create');
     Route::get('/staff/{id}', \App\Modules\Staff\Livewire\StaffDetail::class)->name('staff.show')->middleware('can:staff.view');
-    Route::get('/notifications', \App\Modules\Notification\Livewire\NotificationList::class)->name('notifications.index')->middleware('can:notifications.manage_templates');
+    Route::get('/notifications', \App\Modules\Notification\Livewire\NotificationList::class)->name('notifications.index')->middleware('can:notifications.view');
+
     Route::get('/users', \App\Modules\Users\Livewire\UserList::class)->name('users.index')->middleware('can:users.view');
     Route::get('/roles', \App\Modules\Roles\Livewire\RoleList::class)->name('roles.index')->middleware('can:roles.view');
     Route::get('/audit', \App\Modules\Audit\Livewire\AuditLogList::class)->name('audit.index')->middleware('can:audit.view');
@@ -67,6 +68,6 @@ Route::middleware(['auth', 'ensure.2fa'])->group(function () {
     Route::get('/products', \App\Modules\Products\Livewire\ProductList::class)->name('products.index')->middleware('can:products.view');
     Route::get('/customers', \App\Modules\Customers\Livewire\CustomerList::class)->name('customers.index')->middleware('can:customers.view');
     Route::get('/customers/create', \App\Modules\Customers\Livewire\CustomerForm::class)->name('customers.create')->middleware('can:customers.create');
-    Route::get('/', fn () => view('dashboard'))->name('dashboard');
+    Route::get('/', fn () => view('dashboard'))->name('dashboard')->middleware('can:dashboard.view');
     Route::get('/customers/{id}', \App\Modules\Customers\Livewire\CustomerDetail::class)->name('customers.show')->middleware('can:customers.view');
 });

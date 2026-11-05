@@ -13,7 +13,7 @@ class NotificationCrudTest extends TestCase
     {
         $user = User::factory()->create();
         $this->seed(\Database\Seeders\PermissionSeeder::class);
-        $user->givePermissionTo('notifications.manage_templates');
+        $user->givePermissionTo('notifications.view', 'notifications.manage_templates');
         $this->actingAs($user);
         return $user;
     }
