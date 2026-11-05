@@ -11,7 +11,7 @@ class Product extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name', 'sku', 'barcode', 'category', 'brand', 'description', 'unit', 'cost_price', 'sell_price', 'min_price', 'track_batch', 'track_expiry', 'status'];
+    protected $fillable = ['name', 'sku', 'barcode', 'category', 'brand', 'description', 'unit', 'cost_price', 'sell_price', 'min_price', 'track_inventory', 'track_batch', 'track_expiry', 'status'];
 
-    protected $casts = ['track_batch' => 'boolean', 'track_expiry' => 'boolean'];
+    protected $casts = ['track_inventory' => 'boolean', 'track_batch' => 'boolean', 'track_expiry' => 'boolean'];
 }

@@ -19,18 +19,35 @@ class ProductForm extends Component
 
     public float $sellPrice = 0;
 
+    public bool $trackInventory = false;
+
     protected function rules(): array
     {
-        return ['name' => 'required|string|max:255', 'sku' => 'required|string|max:100', 'sellPrice' => 'nullable|numeric|min:0'];
+        return [
+            'name' => 'required|string|max:255',
+            'sku' => 'required|string|max:100',
+            'sellPrice' => 'nullable|numeric|min:0',
+            'trackInventory' => 'boolean',
+        ];
     }
 
     public function save(ProductService $svc): void
     {
         $this->validate();
         if ($this->productId) {
-            $svc->update(RecordFinder::forClass(Product::class, $this->productId), ['name' => $this->name, 'sku' => $this->sku, 'sell_price' => $this->sellPrice]);
+            $svc->update(RecordFinder::forClass(Product::class, $this->productId), [
+                'name' => $this->name,
+                'sku' => $this->sku,
+                'sell_price' => $this->sellPrice,
+                'track_inventory' => $this->trackInventory,
+            ]);
         } else {
-            $svc->create(['name' => $this->name, 'sku' => $this->sku, 'sell_price' => $this->sellPrice]);
+            $svc->create([
+                'name' => $this->name,
+                'sku' => $this->sku,
+                'sell_price' => $this->sellPrice,
+                'track_inventory' => $this->trackInventory,
+            ]);
         }
         session()->flash('success', 'Produk disimpan.');
         $this->redirect(route('products.index'));
@@ -53,6 +70,7 @@ class ProductForm extends Component
                 $this->name = $p->name;
                 $this->sku = $p->sku;
                 $this->sellPrice = (float) $p->sell_price;
+                $this->trackInventory = $p->track_inventory;
             }
         }
 

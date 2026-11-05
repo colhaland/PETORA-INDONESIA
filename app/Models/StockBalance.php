@@ -10,6 +10,8 @@ class StockBalance extends Model
 {
     protected $fillable = ['warehouse_id', 'product_id', 'batch_number', 'expiry_date', 'quantity'];
 
+    protected $casts = ['expiry_date' => 'date', 'quantity' => 'decimal:3'];
+
     public function product()
     {
         return $this->belongsTo(Product::class);

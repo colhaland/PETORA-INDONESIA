@@ -1,11 +1,44 @@
 # Laporan Audit Codebase PETORA
 
+## Status Remediasi Tahap 0
+
+Status di bawah memperbarui F-01 sampai F-14 berdasarkan perubahan kode dan verifikasi tes setelah audit. **Tahap 0 belum selesai**: F-01, F-04, F-06, dan F-13 masih parsial atau terbuka.
+
+| Temuan | Status | Perbaikan dan bukti | Sisa pekerjaan |
+|---|---|---|---|
+| F-01 | Parsial | Layout aplikasi, pemuatan aset Vite, dan navigasi role-aware telah ditambahkan. `npm run build` berhasil. | Banyak layar modul yang masih stub belum dibangun; pengalaman aplikasi end-to-end belum siap. |
+| F-02 | Selesai | Enrollment 2FA Admin/Super Admin, konfirmasi TOTP, secret terenkripsi, dan kode pemulihan diterapkan; alur diuji. | Tidak ada yang diketahui dalam cakupan temuan ini. |
+| F-03 | Selesai | Perintah bootstrap Super Admin hanya berjalan pada instalasi tanpa pengguna, meminta kredensial secara interaktif, dan memakai marker database untuk mencegah bootstrap ulang/bersamaan. | Belum ada yang diketahui; tetap jalankan hanya pada database awal yang benar. |
+| F-04 | Belum selesai | POS kini memilih produk katalog dan validasi pembayaran diterapkan. | Penjualan dan penerimaan pembelian belum membuat mutasi stok; skema item PO/receipt dan kebijakan produk yang dilacak stok belum tersedia. |
+| F-05 | Selesai | Pembayaran memvalidasi status dan nominal, membatasi jumlah terhadap saldo, dan menggunakan kunci idempotensi unik. | Tidak ada yang diketahui dalam cakupan temuan ini. |
+| F-06 | Parsial | Harga diambil dari katalog dan pajak dihitung server-side menggunakan konfigurasi. | Kebijakan serta alur diskon belum ditentukan/diimplementasikan; verifikasi harga minimum dan diskon belum tersedia. |
+| F-07 | Selesai | Revisi menyimpan snapshot JSON valid dan menggunakan jalur yang diizinkan trigger PostgreSQL. Tes migrasi dan suite PostgreSQL lulus. | Tidak ada yang diketahui dalam cakupan temuan ini. |
+| F-08 | Selesai | Password statis dihapus; akun baru menggunakan kredensial acak dan alur reset password. | Pengiriman email produksi perlu kredensial SMTP yang sah. |
+| F-09 | Selesai | Rate limiting/lockout 2FA, pencegahan replay berbasis counter, kode pemulihan satu kali, dan penghapusan fallback plaintext diterapkan. | Tidak ada yang diketahui dalam cakupan temuan ini. |
+| F-10 | Selesai | Cabang divalidasi server-side dari akses pengguna; form dan service tidak mempercayai cabang yang dimanipulasi klien. | Tidak ada yang diketahui dalam cakupan temuan ini. |
+| F-11 | Selesai | Identitas dokter ditentukan dari pengguna terautentikasi dan diuji di service. | Tidak ada yang diketahui dalam cakupan temuan ini. |
+| F-12 | Selesai | Perubahan Settings memerlukan `settings.manage`, dengan whitelist dan validasi nilai di service. | Tidak ada yang diketahui dalam cakupan temuan ini. |
+| F-13 | Parsial | Workflow CI PostgreSQL ditambahkan; guard produksi menolak konfigurasi tidak aman; skrip deploy/rollback gagal eksplisit alih-alih mengklaim sukses. | Deployment nyata belum dibuat karena target infrastruktur dan prosedur rilis belum tersedia. |
+| F-14 | Selesai | Foreign key data medis/keuangan memakai kebijakan restrict dan trigger revisi medis dilindungi; tes PostgreSQL lulus. | Uji operasional restore/retensi tetap diperlukan sebelum produksi. |
+
+### Verifikasi remediasi
+
+- PostgreSQL 16: `php artisan migrate:fresh --force && php artisan test` — **173 passed (260 assertions)**.
+- SQLite: `php artisan test` — **172 passed, 1 skipped (257 assertions)**; tes yang dilewati memerlukan perilaku foreign key PostgreSQL.
+- `./vendor/bin/pint --test --dirty` — lulus.
+- `npm run build` — lulus; Vite menampilkan peringatan opsional bahwa `fontaine` tidak terpasang.
+- Tes fixture menggunakan ID cabang aktual, bukan mengasumsikan sequence PostgreSQL selalu menghasilkan ID `1`.
+
+Migrasi baru `database/migrations/2026_11_05_130000_harden_auth_payments_audit_and_foreign_keys.php` menambahkan state counter TOTP, kode pemulihan, marker bootstrap, idempotensi pembayaran, perlindungan append-only audit, perlindungan revisi medis, dan foreign key restrict. Migrasi telah dijalankan pada PostgreSQL 16 dalam pengujian di atas.
+
+Hasil ini **tidak memenuhi Definition of Done Tahap 0** karena F-04/F-06 masih menyisakan risiko integritas stok dan kebijakan diskon, sementara F-13 belum memiliki target deployment nyata. F-01 juga tetap menjadi pekerjaan produk yang belum selesai.
+
 Tanggal audit: 5 November 2026
 Objek audit: `PETORA-INDONESIA-main` (arsip ZIP yang diunggah)
 Acuan: `PETORA_MTS_v2.md`, `AGENT.md`, `docs/ADR/0001-stack-deviation-and-remediation.md`
 Metode: tinjauan statis penuh terhadap kode, skema migrasi, konfigurasi, test, infrastruktur, dan dokumentasi.
 
-> **Batasan penting:** Lingkungan audit tidak memiliki PHP, Composer, maupun akses jaringan, sehingga test suite **tidak dijalankan** dan aplikasi **tidak dijalankan**. Temuan berasal dari pembacaan kode dan perbandingan dengan MTS. Temuan yang bergantung pada perilaku runtime ditandai "perlu verifikasi runtime". Rekomendasi pertama dari laporan ini adalah menjalankan `composer install`, `php artisan test`, dan suite PostgreSQL.
+> **Batasan audit awal (5 November 2026):** Lingkungan audit saat itu tidak memiliki PHP, Composer, maupun akses jaringan, sehingga test suite dan aplikasi tidak dijalankan. Status remediasi di atas merupakan verifikasi runtime berikutnya, termasuk suite PostgreSQL 16.
 
 ---
 
@@ -816,4 +849,3 @@ Daftar lengkap dapat dihasilkan ulang dengan skrip pencarian string literal pada
 | F-42 | P1 | `/health` dan monitoring belum ada |
 | F-43 | P1 | Compose dev mengekspos layanan dengan kredensial lemah |
 | F-44–F-72 | P2–P3 | Lihat Bagian 5 |
-

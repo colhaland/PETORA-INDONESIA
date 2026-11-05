@@ -45,6 +45,23 @@ final class Money
         return number_format((float) self::of($a, $scale) * (float) self::of($b, $scale), $scale, '.', '');
     }
 
+    public static function multiplyQuantity(mixed $quantity, mixed $unitPrice, int $scale = 2, int $quantityScale = 3): string
+    {
+        if (function_exists('bcmul') && function_exists('bcadd')) {
+            $product = bcmul(self::of($quantity, $quantityScale), self::of($unitPrice, $scale), $scale + $quantityScale);
+            $rounding = '0.'.str_repeat('0', $scale).'5';
+
+            return bcadd($product, $rounding, $scale);
+        }
+
+        return number_format(
+            round((float) $quantity * (float) $unitPrice, $scale, PHP_ROUND_HALF_UP),
+            $scale,
+            '.',
+            '',
+        );
+    }
+
     public static function cmp(mixed $a, mixed $b, int $scale = 2): int
     {
         if (function_exists('bccomp')) {

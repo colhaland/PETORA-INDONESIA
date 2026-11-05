@@ -10,6 +10,8 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Models\Warehouse;
+use App\Modules\Inventory\Services\StockService;
 use App\Support\AuditService;
 use App\Support\BranchAuthorization;
 use App\Support\DocumentNumberService;
@@ -20,15 +22,23 @@ use Illuminate\Support\Facades\Gate;
 
 class PosService
 {
-    public function createOrder(int $branchId, ?int $customerId, int $userId): Order
+    public function createOrder(int $branchId, ?int $customerId, int $userId, ?int $warehouseId = null): Order
     {
         Gate::authorize('pos.create');
         BranchAuthorization::assertCanAccess($branchId);
         $branch = Branch::query()->findOrFail($branchId);
+        if ($warehouseId !== null) {
+            Warehouse::query()
+                ->whereKey($warehouseId)
+                ->where('branch_id', $branchId)
+                ->where('status', 'active')
+                ->firstOrFail();
+        }
         $branchCode = $branch->code;
         $order = Order::create([
             'order_number' => DocumentNumberService::next('INV', $branchCode),
             'branch_id' => $branchId,
+            'warehouse_id' => $warehouseId,
             'customer_id' => $customerId,
             'created_by' => $userId,
             'status' => 'draft',
@@ -42,11 +52,33 @@ class PosService
         return $order;
     }
 
+    public function setWarehouse(Order $order, int $warehouseId): void
+    {
+        Gate::authorize('pos.create');
+        $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+        BranchAuthorization::assertCanAccess((int) $order->branch_id);
+        if (! in_array($order->status, [Order::STATUS_DRAFT, Order::STATUS_OPEN], true)
+            || $order->payments()->exists()
+            || $order->stock_issued_at !== null) {
+            throw new \RuntimeException('Gudang hanya dapat diubah pada order yang belum dibayar.');
+        }
+
+        Warehouse::query()
+            ->whereKey($warehouseId)
+            ->where('branch_id', $order->branch_id)
+            ->where('status', 'active')
+            ->firstOrFail();
+        $order->update(['warehouse_id' => $warehouseId]);
+    }
+
     public function addItem(Order $order, int $productId, float $qty): OrderItem
     {
         Gate::authorize('pos.create');
         if (! is_finite($qty) || $qty <= 0) {
             throw new \InvalidArgumentException('Jumlah produk harus lebih besar dari nol.');
+        }
+        if (abs($qty - round($qty, 3)) > 0.0000001 || round($qty, 3) <= 0) {
+            throw new \InvalidArgumentException('Jumlah produk maksimal tiga angka desimal dan harus lebih besar dari nol.');
         }
 
         return DB::transaction(function () use ($order, $productId, $qty): OrderItem {
@@ -57,19 +89,25 @@ class PosService
                 throw new \RuntimeException('Order yang sudah dibayar atau ditutup tidak dapat diubah.');
             }
 
-            $product = Product::query()->where('status', 'active')->findOrFail($productId);
+            $product = Product::query()->where('status', 'active')->lockForUpdate()->findOrFail($productId);
             $price = Money::of($product->sell_price, 2);
             if (Money::cmp($price, (string) $product->min_price, 2) < 0 || ! Money::isPositive($price, 2)) {
                 throw new \RuntimeException('Harga jual produk tidak valid; periksa harga katalog.');
             }
 
             $quantity = number_format($qty, 3, '.', '');
+            $itemTotal = Money::multiplyQuantity($quantity, $price);
+            if (! Money::isPositive($itemTotal, 2)) {
+                throw new \InvalidArgumentException('Jumlah terlalu kecil untuk menghasilkan nilai transaksi positif.');
+            }
             $item = $lockedOrder->items()->create([
                 'product_id' => $product->id,
                 'description' => $product->name,
                 'quantity' => $quantity,
                 'unit_price' => $price,
-                'total' => Money::mul($quantity, $price, 2),
+                'total' => $itemTotal,
+                'inventory_managed' => $product->track_inventory,
+                'track_expiry' => $product->track_expiry,
             ]);
 
             $subtotal = '0.00';
@@ -134,6 +172,10 @@ class PosService
             if (! in_array($order->status, [Order::STATUS_DRAFT, Order::STATUS_OPEN, Order::STATUS_PARTIALLY_PAID], true)) {
                 throw new \RuntimeException('Status order tidak mengizinkan pembayaran.');
             }
+            if (Money::cmp((string) $order->discount, '0.00', 2) !== 0
+                || $order->items()->where('discount', '<>', 0)->exists()) {
+                throw new \RuntimeException('Diskon belum diaktifkan; kebijakan diskon belum ditetapkan.');
+            }
 
             $paid = '0.00';
             foreach ($order->payments()->lockForUpdate()->get() as $existing) {
@@ -145,15 +187,21 @@ class PosService
                 throw new \InvalidArgumentException('Nominal pembayaran melebihi saldo order.');
             }
 
+            $paidAfterPayment = Money::add($paid, $amountS, 2);
+            $willBePaid = Money::cmp($paidAfterPayment, $total, 2) >= 0 && Money::isPositive($total, 2);
+            if ($willBePaid) {
+                app(StockService::class)->issueForPaidOrder($order, auth()->id());
+            }
+
             $payment = Payment::create([
                 'order_id' => $order->id,
                 'method' => $method,
                 'amount' => $amountS,
                 'idempotency_key' => $idempotencyKey,
             ]);
-            $paid = Money::add($paid, $amountS, 2);
+            $paid = $paidAfterPayment;
             $updates = [];
-            if (Money::cmp($paid, $total, 2) >= 0 && Money::isPositive($total, 2)) {
+            if ($willBePaid) {
                 $updates['status'] = 'paid';
                 $updates['paid_at'] = $order->paid_at ?: now();
             } elseif (Money::isPositive($paid, 2)) {

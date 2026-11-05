@@ -28,12 +28,13 @@ class Order extends Model
     public const STATUS_REFUNDED = 'refunded';
 
     protected $fillable = [
-        'order_number', 'branch_id', 'customer_id', 'created_by', 'status', 'paid_at',
+        'order_number', 'branch_id', 'warehouse_id', 'customer_id', 'created_by', 'status', 'paid_at', 'stock_issued_at',
         'subtotal', 'discount', 'tax', 'total', 'idempotency_key',
     ];
 
     protected $casts = [
         'paid_at' => 'datetime',
+        'stock_issued_at' => 'datetime',
         'subtotal' => 'decimal:2',
         'discount' => 'decimal:2',
         'tax' => 'decimal:2',
@@ -48,6 +49,11 @@ class Order extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 
     public function isPaid(): bool
