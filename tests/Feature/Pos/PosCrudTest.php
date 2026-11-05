@@ -17,11 +17,7 @@ class PosCrudTest extends TestCase
 
     private function authUser(): User
     {
-        $user = User::factory()->create();
-        $this->seed(PermissionSeeder::class);
-        $this->seed(BranchSeeder::class);
-        $user->givePermissionTo('pos.create', 'pos.cash_manage', 'pos.cash_close', 'pos.view');
-        $this->actingAs($user);
+        $user = $this->actingAsWithPermissions(['pos.create', 'pos.cash_manage', 'pos.cash_close', 'pos.view'], 1);
 
         return $user;
     }

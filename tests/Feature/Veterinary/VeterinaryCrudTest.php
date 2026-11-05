@@ -23,6 +23,7 @@ class VeterinaryCrudTest extends TestCase
         $this->seed(PermissionSeeder::class);
         $this->seed(BranchSeeder::class);
         $user->givePermissionTo('veterinary.create', 'veterinary.update', 'veterinary.view', 'medical_records.finalize', 'medical_records.create', 'medical_records.update');
+        $user->branches()->sync([1]);
         $this->actingAs($user);
 
         return $user;

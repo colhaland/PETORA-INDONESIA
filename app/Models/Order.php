@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Traits\BelongsToBranch;
 use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
+    use BelongsToBranch;
+
     public const STATUS_DRAFT = 'draft';
 
     public const STATUS_OPEN = 'open';

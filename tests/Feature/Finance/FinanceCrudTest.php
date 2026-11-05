@@ -21,6 +21,7 @@ class FinanceCrudTest extends TestCase
         $this->seed(PermissionSeeder::class);
         $this->seed(BranchSeeder::class);
         $user->givePermissionTo('finance.view', 'finance.expense_create', 'finance.expense_approve', 'finance.reconcile');
+        $user->branches()->sync([1]);
         $this->actingAs($user);
 
         return $user;

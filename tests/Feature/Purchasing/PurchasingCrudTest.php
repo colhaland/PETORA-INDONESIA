@@ -22,6 +22,7 @@ class PurchasingCrudTest extends TestCase
         $this->seed(PermissionSeeder::class);
         $this->seed(BranchSeeder::class);
         $user->givePermissionTo('purchasing.create', 'purchasing.approve', 'purchasing.receive', 'purchasing.view');
+        $user->branches()->sync([1]);
         $this->actingAs($user);
 
         return $user;

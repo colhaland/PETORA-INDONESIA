@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Traits\BelongsToBranch;
 use Illuminate\Database\Eloquent\Model;
 
 class Expense extends Model
 {
-    protected $fillable = ['branch_id', 'category', 'amount', 'description', 'created_by'];
+    use BelongsToBranch;
 
-    protected $casts = [
-        'amount' => 'decimal:2',
-    ];
+    protected $fillable = ['branch_id', 'category', 'amount', 'description', 'status', 'created_by'];
 }
