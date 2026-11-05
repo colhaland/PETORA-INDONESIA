@@ -2,16 +2,16 @@
 
 ## Status Remediasi Tahap 0
 
-Status di bawah memperbarui F-01 sampai F-14 berdasarkan perubahan kode dan verifikasi tes setelah audit. **Tahap 0 belum selesai**: F-01, F-04, F-06, dan F-13 masih parsial atau terbuka.
+Status di bawah memperbarui F-01 sampai F-14 berdasarkan perubahan kode dan verifikasi tes setelah audit. **Tahap 0 belum selesai**: F-01 dan F-13 masih terbuka/parsial.
 
 | Temuan | Status | Perbaikan dan bukti | Sisa pekerjaan |
 |---|---|---|---|
-| F-01 | Parsial | Layout aplikasi, pemuatan aset Vite, dan navigasi role-aware telah ditambahkan. `npm run build` berhasil. | Banyak layar modul yang masih stub belum dibangun; pengalaman aplikasi end-to-end belum siap. |
+| F-01 | Parsial | Dashboard menampilkan omzet/order hari ini dan pelanggan bertransaksi berdasarkan cabang aktif; laporan menghitung order lunas/selesai dengan scope cabang. Ditambahkan akses cepat berbasis permission dan tautan Laporan. Tes UI/otorisasi dan build lulus. | Banyak modul masih stub, dan sebagian belum memiliki schema/model maupun alur bisnis yang mendukung implementasi nyata. |
 | F-02 | Selesai | Enrollment 2FA Admin/Super Admin, konfirmasi TOTP, secret terenkripsi, dan kode pemulihan diterapkan; alur diuji. | Tidak ada yang diketahui dalam cakupan temuan ini. |
 | F-03 | Selesai | Perintah bootstrap Super Admin hanya berjalan pada instalasi tanpa pengguna, meminta kredensial secara interaktif, dan memakai marker database untuk mencegah bootstrap ulang/bersamaan. | Belum ada yang diketahui; tetap jalankan hanya pada database awal yang benar. |
-| F-04 | Belum selesai | POS kini memilih produk katalog dan validasi pembayaran diterapkan. | Penjualan dan penerimaan pembelian belum membuat mutasi stok; skema item PO/receipt dan kebijakan produk yang dilacak stok belum tersedia. |
+| F-04 | Selesai | Produk dapat ditandai eksplisit untuk pelacakan stok; pembayaran lunas mengeluarkan stok secara atomik, penerimaan PO mendukung penerimaan parsial dan idempotensi, serta gudang/cabang/lot divalidasi server-side. Kekurangan stok membatalkan pembayaran. Tes PostgreSQL 16 lulus. | Sebelum deployment dengan data lama, periksa duplikasi saldo untuk lot yang sama; indeks unik baru sengaja gagal aman jika duplikasi ditemukan. |
 | F-05 | Selesai | Pembayaran memvalidasi status dan nominal, membatasi jumlah terhadap saldo, dan menggunakan kunci idempotensi unik. | Tidak ada yang diketahui dalam cakupan temuan ini. |
-| F-06 | Parsial | Harga diambil dari katalog dan pajak dihitung server-side menggunakan konfigurasi. | Kebijakan serta alur diskon belum ditentukan/diimplementasikan; verifikasi harga minimum dan diskon belum tersedia. |
+| F-06 | Selesai (diskon dinonaktifkan) | Harga dan pajak dihitung server-side, harga minimum diperiksa, diskon ditolak saat pembayaran, dan PostgreSQL menegakkan constraint diskon nol. Kebijakan diskon belum tersedia, jadi fitur tetap nonaktif. | Jika diskon akan diaktifkan kelak, tetapkan kebijakan dan implementasikan validasi/otorisasi terpisah sebelum mengubah constraint. |
 | F-07 | Selesai | Revisi menyimpan snapshot JSON valid dan menggunakan jalur yang diizinkan trigger PostgreSQL. Tes migrasi dan suite PostgreSQL lulus. | Tidak ada yang diketahui dalam cakupan temuan ini. |
 | F-08 | Selesai | Password statis dihapus; akun baru menggunakan kredensial acak dan alur reset password. | Pengiriman email produksi perlu kredensial SMTP yang sah. |
 | F-09 | Selesai | Rate limiting/lockout 2FA, pencegahan replay berbasis counter, kode pemulihan satu kali, dan penghapusan fallback plaintext diterapkan. | Tidak ada yang diketahui dalam cakupan temuan ini. |
@@ -23,15 +23,15 @@ Status di bawah memperbarui F-01 sampai F-14 berdasarkan perubahan kode dan veri
 
 ### Verifikasi remediasi
 
-- PostgreSQL 16: `php artisan migrate:fresh --force && php artisan test` — **173 passed (260 assertions)**.
-- SQLite: `php artisan test` — **172 passed, 1 skipped (257 assertions)**; tes yang dilewati memerlukan perilaku foreign key PostgreSQL.
+- PostgreSQL 16: suite penuh pada tahap sebelumnya **183 passed (290 assertions)**; verifikasi fokus terakhir setelah perubahan dashboard/laporan **9 passed (17 assertions)**. Tes dashboard/laporan bersama tes RBAC juga lulus (**23 passed, 30 assertions**) sebelum perapian lookup nama cabang.
+- SQLite: suite penuh saat ini — **184 passed, 3 skipped (295 assertions)**; tes yang dilewati memerlukan perilaku khusus PostgreSQL.
 - `./vendor/bin/pint --test --dirty` — lulus.
 - `npm run build` — lulus; Vite menampilkan peringatan opsional bahwa `fontaine` tidak terpasang.
 - Tes fixture menggunakan ID cabang aktual, bukan mengasumsikan sequence PostgreSQL selalu menghasilkan ID `1`.
 
-Migrasi baru `database/migrations/2026_11_05_130000_harden_auth_payments_audit_and_foreign_keys.php` menambahkan state counter TOTP, kode pemulihan, marker bootstrap, idempotensi pembayaran, perlindungan append-only audit, perlindungan revisi medis, dan foreign key restrict. Migrasi telah dijalankan pada PostgreSQL 16 dalam pengujian di atas.
+Migrasi `database/migrations/2026_11_05_130000_harden_auth_payments_audit_and_foreign_keys.php` menambahkan state counter TOTP, kode pemulihan, marker bootstrap, idempotensi pembayaran, perlindungan append-only audit, perlindungan revisi medis, dan foreign key restrict. Migrasi `database/migrations/2026_11_05_140000_connect_catalog_purchase_and_stock.php` menambahkan flag pelacakan stok, gudang order, item PO/receipt, marker idempotensi penerimaan, indeks saldo lot, dan constraint diskon nol di PostgreSQL. Kedua migrasi dijalankan oleh suite PostgreSQL 16. Tidak ada data produksi yang dihapus; indeks saldo baru akan gagal aman bila data lama mengandung saldo lot duplikat, sehingga perlu diperiksa sebelum deployment.
 
-Hasil ini **tidak memenuhi Definition of Done Tahap 0** karena F-04/F-06 masih menyisakan risiko integritas stok dan kebijakan diskon, sementara F-13 belum memiliki target deployment nyata. F-01 juga tetap menjadi pekerjaan produk yang belum selesai.
+Hasil ini **tidak memenuhi Definition of Done Tahap 0**. F-01 belum diselesaikan karena masih ada modul dengan layar stub dan tidak semua memiliki skema/alur bisnis aktual yang cukup untuk implementasi tanpa membuat fungsi palsu. F-13 masih parsial karena target infrastruktur dan prosedur rilis belum tersedia. F-04 dan F-06 sudah ditangani dengan cakupan yang dijelaskan di atas.
 
 Tanggal audit: 5 November 2026
 Objek audit: `PETORA-INDONESIA-main` (arsip ZIP yang diunggah)
@@ -456,7 +456,7 @@ Status: **Berfungsi** (sesuai MTS untuk ruang lingkup R1), **Sebagian** (logika 
 | 24 | Finance | R1 | Sebagian (berisiko) | Hard delete dan edit = hapus + buat (F-26); approval no-op |
 | 25 | Accounting | R3 | Stub | `AccountingService` 24 baris, tanpa tabel |
 | 26 | Consignment | R3 | Stub | `ConsignmentService` 26 baris, tanpa tabel |
-| 27 | Reports & Analytics | R1 | Sebagian (salah) | Pendapatan termasuk order void dan draft (F-25) |
+| 27 | Reports & Analytics | R1 | Sebagian | Ringkasan omzet kini hanya memasukkan order paid/completed dan dibatasi ke cabang aktif; ekspor dan laporan terperinci belum tersedia (F-25) |
 | 28 | Notification | R1 | Sebagian | Baris database saja; tanpa pengiriman dan penjadwal (F-40) |
 | 29 | Customer Portal | R1 | Stub | Tidak ada login pelanggan, tidak ada route (F-18) |
 | 30 | System Settings | R1 | Sebagian (tidak aman) | Tanpa authz (F-12); tidak dibaca runtime (F-15) |

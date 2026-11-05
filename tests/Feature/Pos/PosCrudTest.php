@@ -188,6 +188,39 @@ class PosCrudTest extends TestCase
         $service->pay($order, 'cash', 10000, 'tracked-order-no-warehouse');
     }
 
+    public function test_insufficient_tracked_stock_rolls_back_order_payment(): void
+    {
+        $this->authUser();
+        $warehouse = Warehouse::create([
+            'branch_id' => $this->primaryBranchId(),
+            'code' => 'POS2',
+            'name' => 'POS warehouse',
+            'is_main' => true,
+        ]);
+        $product = $this->product();
+        $product->update(['track_inventory' => true]);
+        $balance = StockBalance::create([
+            'warehouse_id' => $warehouse->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ]);
+        $service = new PosService;
+        $order = $service->createOrder($this->primaryBranchId(), null, auth()->id(), $warehouse->id);
+        $service->addItem($order, $product->id, 2);
+
+        try {
+            $service->pay($order, 'cash', 20000, 'tracked-order-insufficient-stock');
+            $this->fail('Insufficient stock must reject payment.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('Stok tidak mencukupi.', $exception->getMessage());
+        }
+
+        $this->assertSame(0, $order->payments()->count());
+        $this->assertSame('1.000', $balance->fresh()->quantity);
+        $this->assertNull($order->fresh()->stock_issued_at);
+        $this->assertDatabaseCount('stock_movements', 0);
+    }
+
     private function product(): Product
     {
         return Product::create([

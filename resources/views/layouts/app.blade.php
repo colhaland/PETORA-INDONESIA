@@ -24,6 +24,7 @@
                     @can('finance.view') <a href="{{ route('finance.index') }}">Keuangan</a> @endcan
                     @can('staff.view') <a href="{{ route('staff.index') }}">Staf</a> @endcan
                     @can('audit.view') <a href="{{ route('audit.index') }}">Audit Log</a> @endcan
+                    @can('reports.view') <a href="{{ route('reports.index') }}">Laporan</a> @endcan
                     @can('settings.view') <a href="{{ route('settings.index') }}">Pengaturan</a> @endcan
                 </nav>
             </aside>

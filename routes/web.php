@@ -20,6 +20,7 @@ use App\Modules\CustomerPortal\Livewire\CustomerPortalList;
 use App\Modules\Customers\Livewire\CustomerDetail;
 use App\Modules\Customers\Livewire\CustomerForm;
 use App\Modules\Customers\Livewire\CustomerList;
+use App\Modules\Dashboard\Services\DashboardService;
 use App\Modules\Finance\Livewire\FinanceForm;
 use App\Modules\Finance\Livewire\FinanceList;
 use App\Modules\Grooming\Livewire\GroomingForm;
@@ -128,6 +129,6 @@ Route::middleware(['auth', 'ensure.2fa'])->group(function () {
     Route::get('/products', ProductList::class)->name('products.index')->middleware('can:products.view');
     Route::get('/customers', CustomerList::class)->name('customers.index')->middleware('can:customers.view');
     Route::get('/customers/create', CustomerForm::class)->name('customers.create')->middleware('can:customers.create');
-    Route::get('/', fn () => view('dashboard'))->name('dashboard')->middleware('can:dashboard.view');
+    Route::get('/', fn (DashboardService $service) => view('dashboard', $service->summary()))->name('dashboard')->middleware('can:dashboard.view');
     Route::get('/customers/{id}', CustomerDetail::class)->name('customers.show')->middleware('can:customers.view');
 });

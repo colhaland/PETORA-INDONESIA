@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use Database\Seeders\BranchSeeder;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -26,7 +27,9 @@ class AuthLoginFlowTest extends TestCase
     {
         $user = User::factory()->create(['password' => bcrypt('password12345')]);
         $this->seed(PermissionSeeder::class);
+        $this->seed(BranchSeeder::class);
         $user->givePermissionTo('dashboard.view');
+        $user->branches()->sync([$this->primaryBranchId()]);
         $this->actingAs($user)->get('/')->assertOk();
     }
 }
